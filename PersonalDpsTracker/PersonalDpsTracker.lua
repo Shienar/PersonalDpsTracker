@@ -61,7 +61,7 @@ function PDT.formatNumber(number)
 		end
 	elseif PDT.savedVariables.formatType == 3 then
 		--134
-		--4.1
+		--4.1M
 		if number < 1000000 then
 			return math.floor(number/1000).."k"
 		else
@@ -74,6 +74,24 @@ function PDT.formatNumber(number)
 	return -1
 end
 	
+local function updateText()
+	local formattedString = PDT.savedVariables.displayText
+	if PDT.TotalDamage_Boss ~= 0 then 
+		formattedString = string.gsub(formattedString, "<b>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage_Boss, PDT.fightTime()))))
+	else
+		formattedString = string.gsub(formattedString, "<b>", "0k")
+	end
+	formattedString = string.gsub(formattedString, "<B>", tostring(PDT.formatNumber(PDT.TotalDamage_Boss)))
+	if PDT.TotalDamage ~= 0 then
+		formattedString = string.gsub(formattedString, "<d>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage, PDT.fightTime()))))
+	else
+		formattedString = string.gsub(formattedString, "<d>", "0k")
+	end
+	formattedString = string.gsub(formattedString, "<D>", tostring(PDT.formatNumber(PDT.TotalDamage)))
+	formattedString = string.gsub(formattedString, "<t>", tostring(PDT.formattedTime(math.floor(PDT.fightTime()))))
+			
+	DpsIndicatorLabel:SetText(formattedString)
+end
 
 local function containsVal(table, val)
 	for k, v in pairs(table) do
@@ -106,6 +124,7 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 		--Reset variables
 		PDT.startTime, PDT.endTime = 0, 0
 		PDT.TotalDamage = 0 
+		PDT.TotalDamage_Boss = 0
 	end
 	
 end
@@ -145,15 +164,7 @@ function PDT.OnCombatEvent(eventCode, result, isError, abilityName, abilityGraph
 			
 			PDT.endTime = GetGameTimeMilliseconds()
 			
-			local formattedString = PDT.savedVariables.displayText
-			formattedString = string.gsub(formattedString, "<b>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage_Boss, PDT.fightTime()))))
-			formattedString = string.gsub(formattedString, "<B>", tostring(PDT.formatNumber(PDT.TotalDamage_Boss)))
-			formattedString = string.gsub(formattedString, "<d>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage, PDT.fightTime()))))
-			formattedString = string.gsub(formattedString, "<D>", tostring(PDT.formatNumber(PDT.TotalDamage)))
-			formattedString = string.gsub(formattedString, "<t>", tostring(PDT.formattedTime(math.floor(PDT.fightTime()))))
-			
-			DpsIndicatorLabel:SetText(formattedString)
-			
+			updateText()
 		end
 	end
 end
@@ -202,9 +213,6 @@ function PDT.Initialize()
         tooltip = "",
         buttonText = "RESET",
         clickHandler = function(control, button)
-			PDT.savedVariables.displayText = PDT.defaults.displayText
-			PDT.savedVariables.formatType = PDT.defaults.formatType
-			PDT.savedVariables.selectedFormatName = PDT.defaults.selectedFormatName
 			PDT.savedVariables.colorR = PDT.defaults.colorR
 			PDT.savedVariables.colorG = PDT.defaults.colorG
 			PDT.savedVariables.colorB = PDT.defaults.colorB
@@ -225,7 +233,12 @@ function PDT.Initialize()
 			DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 			DpsIndicatorLabel:ClearAnchors()
 			DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
-        end,
+        
+			PDT.savedVariables.displayText = PDT.defaults.displayText
+			PDT.savedVariables.formatType = PDT.defaults.formatType
+			PDT.savedVariables.selectedFormatName = PDT.defaults.selectedFormatName
+			updateText()
+		end,
         disable = function() return areSettingsDisabled end,
     }
 	
@@ -242,6 +255,8 @@ function PDT.Initialize()
         default = "DPS: <b> (<d>)",
         setFunction = function(value)
             PDT.savedVariables.displayText = value
+			
+			updateText()
         end,
         getFunction = function()
             return PDT.savedVariables.displayText
@@ -461,6 +476,8 @@ function PDT.Initialize()
     }
 	
 	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
+	
+	updateText()
 	
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT.ChangePlayerCombatState)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT.OnCombatEvent)
