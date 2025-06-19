@@ -1,0 +1,10 @@
+## Title: PersonalDpsTracker
+## Author: Shienar
+## APIVersion: 101046
+## Version: 1.0.0
+## IsLibrary: False
+## ConsoleDependsOn: LibHarvensAddonSettings>=20004
+## SavedVariables: PDTSavedVariables
+
+PersonalDpsTracker.xml
+PersonalDpsTracker.lua
