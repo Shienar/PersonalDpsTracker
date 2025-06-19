@@ -1,20 +1,5 @@
 PDT = { name = "PersonalDpsTracker" }
 
-PDT.TotalDamage = 0
-PDT.PreCombatDamage = 0
-PDT.startTime = 0 --milliseconds
-PDT.endTime = 0 --milliseconds
-PDT.fightTime = function () return ((PDT.endTime-PDT.startTime)/1000) end --seconds
-PDT.rawDPS = function () return PDT.TotalDamage/PDT.fightTime() end
-PDT.formattedDPS = function() 
-	local formatted = string.format("%.1f", PDT.rawDPS())
-	while true do  
-		formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-		if (k==0) then break end
-	end
-  return formatted
-end
-
 PDT.defaults = {
 	colorR = 1.0,
 	colorG = 1.0,
@@ -22,12 +7,91 @@ PDT.defaults = {
 	colorA = 1.0,
 	selectedText_font = "18",
 	selectedFont = "ZoFontGamepad18",
+	displayText = "DPS: <b> (<d>)",
+	formatType = 1,
+	selectedFormatName = "134,519",
 	selectedText_pos = "Top Left",
 	selectedPos = 3,
 	checked = false,
 	offset_x = 0,
 	offset_y = 0,
 }
+
+PDT.TotalDamage = 0
+PDT.PreCombatDamage = 0
+PDT.TotalDamage_Boss = 0
+PDT.PreCombatDamage_Boss = 0
+PDT.startTime = 0 --milliseconds
+PDT.endTime = 0 --milliseconds
+PDT.fightTime = function () return ((PDT.endTime-PDT.startTime)/1000) end --seconds
+PDT.bossNames = { }
+
+function PDT.formattedTime(s)
+	local minutes, seconds = math.floor(s/60), s%60
+	if seconds < 10 then return minutes..":0"..seconds end
+	return minutes..":"..seconds
+end
+
+function PDT.getRawDPS(damage, duration) 
+	return damage/duration
+end
+
+function PDT.formatNumber(number)
+	--input examples: 134519.165 dps or 4149256 damage
+	if PDT.savedVariables.formatType == 1 then
+		--134,519
+		--4,149,257
+		local formatted = tostring(math.floor(number))
+		while true do  
+			formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+			if (k==0) then break end
+		end
+		return formatted
+	elseif PDT.savedVariables.formatType == 2 then
+		--134.5k
+		--4.149M
+		if number < 1000000 then
+			local formatted = math.floor((number/100) + 0.5)
+			formatted = formatted / 10
+			return formatted.."k"
+		else
+			local formatted = math.floor((number/1000) + 0.5)
+			local formatted = formatted / 1000
+			return formatted.."M"
+		end
+	elseif PDT.savedVariables.formatType == 3 then
+		--134
+		--4.1
+		if number < 1000000 then
+			return math.floor(number/1000).."k"
+		else
+			local formatted = math.floor((number/100000) + 0.5)
+			local formatted = formatted / 10
+			return formatted.."M"
+		end
+	end
+	
+	return -1
+end
+	
+
+local function containsVal(table, val)
+	for k, v in pairs(table) do
+		if v == val then return true end
+	end
+	return false
+end
+
+
+function PDT.onNewBosses(code, forceReset)
+	PDT.bossNames = { }
+	for i = 1, 12 do
+		local tempTag = "boss"..i
+		if DoesUnitExist(tempTag) then
+			PDT.bossNames[#PDT.bossNames + 1] = GetUnitName(tempTag)
+		end
+	end
+end
 
 function PDT.ChangePlayerCombatState(event, inCombat)
 	--inCombat == true if the player just entered combat.
@@ -59,23 +123,36 @@ function PDT.OnCombatEvent(eventCode, result, isError, abilityName, abilityGraph
 		  result == ACTION_RESULT_WRECKING_DAMAGE
 		)
 	then
-		--Damage from player to NPC or player pet to NPC
+		--Damage from player to NPC or player pet to NPCs
 		
 		--This event can happen before the combat event, so I'm accounting for the minimal amount of damage the player might deal inbetween.
 		if PDT.activeCombat == false then
 			PDT.PreCombatDamage = PDT.PreCombatDamage + hitValue
+			if containsVal(PDT.bossNames, targetName) then PDT.PreCombatDamage_Boss = PDT.PreCombatDamage_Boss + hitValue end
 			if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
 		else 
 			if PDT.PreCombatDamage ~= 0 then
 				PDT.TotalDamage = PDT.TotalDamage + PDT.PreCombatDamage
+				PDT.TotalDamage_Boss = PDT.TotalDamage_Boss + PDT.PreCombatDamage_Boss
 				PDT.PreCombatDamage = 0
+				PDT.PreCombatDamage_Boss = 0
 			end
 			
 			if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
+			
 			PDT.TotalDamage = PDT.TotalDamage + hitValue
+			if containsVal(PDT.bossNames, targetName) then PDT.TotalDamage_Boss = PDT.TotalDamage_Boss + hitValue end
+			
 			PDT.endTime = GetGameTimeMilliseconds()
 			
-			DpsIndicatorLabel:SetText("DPS: "..PDT.formattedDPS())
+			local formattedString = PDT.savedVariables.displayText
+			formattedString = string.gsub(formattedString, "<b>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage_Boss, PDT.fightTime()))))
+			formattedString = string.gsub(formattedString, "<B>", tostring(PDT.formatNumber(PDT.TotalDamage_Boss)))
+			formattedString = string.gsub(formattedString, "<d>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage, PDT.fightTime()))))
+			formattedString = string.gsub(formattedString, "<D>", tostring(PDT.formatNumber(PDT.TotalDamage)))
+			formattedString = string.gsub(formattedString, "<t>", tostring(PDT.formattedTime(math.floor(PDT.fightTime()))))
+			
+			DpsIndicatorLabel:SetText(formattedString)
 			
 		end
 	end
@@ -100,16 +177,8 @@ function PDT.Initialize()
 	local settings = LibHarvensAddonSettings:AddAddon("Personal Dps Tracker")
 	local areSettingsDisabled = false
 	
-	--[[local colorR, colorG, colorB, colorA = PDT.savedVariables.colorR, PDT.savedVariables.colorG, PDT.savedVariables.colorB, PDT.savedVariables.colorA
-	local selectedText_font = PDT.savedVariables.selectedText_font
-	local selectedFont = PDT.savedVariables.selectedFont
-	local selectedText_pos = PDT.savedVariables.selectedText_pos
-	local selectedPos = PDT.savedVariables.selectedPos
-	local checked = PDT.savedVariables.checked
-	local offset_x, offset_y = PDT.savedVariables.offset_x, PDT.savedVariables.offset_y]]
-	
 	local generalSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "General",}
-	local fontSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Font",}
+	local textSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Text",}
 	local positionSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Position",}
 	
 	local toggle = {
@@ -133,6 +202,9 @@ function PDT.Initialize()
         tooltip = "",
         buttonText = "RESET",
         clickHandler = function(control, button)
+			PDT.savedVariables.displayText = PDT.defaults.displayText
+			PDT.savedVariables.formatType = PDT.defaults.formatType
+			PDT.savedVariables.selectedFormatName = PDT.defaults.selectedFormatName
 			PDT.savedVariables.colorR = PDT.defaults.colorR
 			PDT.savedVariables.colorG = PDT.defaults.colorG
 			PDT.savedVariables.colorB = PDT.defaults.colorB
@@ -154,6 +226,58 @@ function PDT.Initialize()
 			DpsIndicatorLabel:ClearAnchors()
 			DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
         end,
+        disable = function() return areSettingsDisabled end,
+    }
+	
+    local editText = {
+        type = LibHarvensAddonSettings.ST_EDIT,
+        label = "Display Text",
+        tooltip = "This setting lets you modify the display text.\n\n"..
+					"Text will only get updated on your screen when you deal damage.\n\n"..
+					"<d> will be replaced with your overall DPS\n"..
+					"<D> will be replaced with your overall damage\n"..
+					"<b> will be replaced with your boss DPS\n"..
+					"<B> will be replaced with your overall damage to bosses\n"..
+					"<t> will be replaced with the fight time\n",
+        default = "DPS: <b> (<d>)",
+        setFunction = function(value)
+            PDT.savedVariables.displayText = value
+        end,
+        getFunction = function()
+            return PDT.savedVariables.displayText
+        end,
+        disable = function() return areSettingsDisabled end,
+    }
+	
+	local formatNumber = {
+        type = LibHarvensAddonSettings.ST_DROPDOWN,
+        label = "Format Number",
+        tooltip = "Change the way that this addon will display large numbers.\n\n"..
+					"1: 134519 becomes 134,519 and 4149257 becomes 4,149,257\n\n"..
+					"2: 134519 becomes 134.5k and 4149257 becomes 4.149M\n\n"..
+					"3: 134519 becomes 134k and 4149257 becomes 4.1M",
+        setFunction = function(combobox, name, item)
+			PDT.savedVariables.selectedFormatName = item.name
+			PDT.savedVariables.formatType = item.data
+        end,
+        getFunction = function()
+            return PDT.savedVariables.selectedFormatName
+        end,
+        default = PDT.defaults.selectedFormatName,
+        items = {
+            {
+                name = "134,519",
+                data = 1
+            },
+            {
+                name = "134.5k",
+                data = 2
+            },
+            {
+                name = "134k",
+                data = 3
+            },
+        },
         disable = function() return areSettingsDisabled end,
     }
 	
@@ -226,6 +350,7 @@ function PDT.Initialize()
         },
         disable = function() return areSettingsDisabled end,
     }
+	
 	
     local dropdown_pos = {
         type = LibHarvensAddonSettings.ST_DROPDOWN,
@@ -335,10 +460,11 @@ function PDT.Initialize()
         disable = function() return areSettingsDisabled end,
     }
 	
-	settings:AddSettings({generalSection, toggle, resetDefaults, fontSection, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
+	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
 	
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT.ChangePlayerCombatState)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT.OnCombatEvent)
+	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_BOSSES_CHANGED, PDT.onNewBosses)
 end
 
 function PDT.OnAddOnLoaded(event, addonName)
