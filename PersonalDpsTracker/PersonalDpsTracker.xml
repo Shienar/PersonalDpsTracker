@@ -6,7 +6,7 @@
 			<Controls>
 				<Label name="$(parent)Label" width="200" height="25" font="ZoFontGamepad18" color="FFFFFF" wrapMode="TRUNCATE" 
 					verticalAlignment="CENTER" horizontalAlignment="CENTER"
-					text="DPS:">
+					text="[<t>]: <b>, <B> (<d>, <D>)">
 					
 					<Anchor point="TOPLEFT" relativeTo="$(parent)" relativePoint="TOPLEFT" />
 				</Label>

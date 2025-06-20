@@ -7,9 +7,10 @@ PDT.defaults = {
 	colorA = 1.0,
 	selectedText_font = "18",
 	selectedFont = "ZoFontGamepad18",
-	displayText = "DPS: <b> (<d>)",
+	displayText = "[<t>]: <d>, <D>",
+	displayText_Boss = "[<t>]: <b>, <B> (<d>, <D>)",
 	formatType = 1,
-	selectedFormatName = "134,519",
+	selectedFormatName = "134,419",
 	selectedText_pos = "Top Left",
 	selectedPos = 3,
 	checked = false,
@@ -39,7 +40,7 @@ end
 function PDT.formatNumber(number)
 	--input examples: 134519.165 dps or 4149256 damage
 	if PDT.savedVariables.formatType == 1 then
-		--134,519
+		--134,419
 		--4,149,257
 		local formatted = tostring(math.floor(number))
 		while true do  
@@ -48,7 +49,7 @@ function PDT.formatNumber(number)
 		end
 		return formatted
 	elseif PDT.savedVariables.formatType == 2 then
-		--134.5k
+		--134.4k
 		--4.149M
 		if number < 1000000 then
 			local formatted = math.floor((number/100) + 0.5)
@@ -75,7 +76,14 @@ function PDT.formatNumber(number)
 end
 	
 local function updateText()
-	local formattedString = PDT.savedVariables.displayText
+	local formattedString = ""
+	
+	if #PDT.bossNames == 0 then
+		 formattedString = PDT.savedVariables.displayText
+	else
+		formattedString = PDT.savedVariables.displayText_Boss
+	end
+	
 	if PDT.TotalDamage_Boss ~= 0 then 
 		formattedString = string.gsub(formattedString, "<b>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage_Boss, PDT.fightTime()))))
 	else
@@ -102,7 +110,6 @@ end
 
 
 function PDT.onNewBosses(code, forceReset)
-	PDT.bossNames = { }
 	for i = 1, 12 do
 		local tempTag = "boss"..i
 		if DoesUnitExist(tempTag) then
@@ -125,6 +132,7 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 		PDT.startTime, PDT.endTime = 0, 0
 		PDT.TotalDamage = 0 
 		PDT.TotalDamage_Boss = 0
+		PDT.bossNames = { }
 	end
 	
 end
@@ -235,6 +243,8 @@ function PDT.Initialize()
 			DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
         
 			PDT.savedVariables.displayText = PDT.defaults.displayText
+			PDT.savedVariables.displayText_Boss = PDT.defaults.displayText_Boss
+			
 			PDT.savedVariables.formatType = PDT.defaults.formatType
 			PDT.savedVariables.selectedFormatName = PDT.defaults.selectedFormatName
 			updateText()
@@ -246,13 +256,13 @@ function PDT.Initialize()
         type = LibHarvensAddonSettings.ST_EDIT,
         label = "Display Text",
         tooltip = "This setting lets you modify the display text.\n\n"..
-					"Text will only get updated on your screen when you deal damage.\n\n"..
+					"This text will display when you aren't fighting a boss.\n\n"..
 					"<d> will be replaced with your overall DPS\n"..
 					"<D> will be replaced with your overall damage\n"..
 					"<b> will be replaced with your boss DPS\n"..
 					"<B> will be replaced with your overall damage to bosses\n"..
 					"<t> will be replaced with the fight time\n",
-        default = "DPS: <b> (<d>)",
+        default = PDT.defaults.displayText,
         setFunction = function(value)
             PDT.savedVariables.displayText = value
 			
@@ -264,13 +274,35 @@ function PDT.Initialize()
         disable = function() return areSettingsDisabled end,
     }
 	
+	local editText_Boss = {
+        type = LibHarvensAddonSettings.ST_EDIT,
+        label = "Display Text (Boss)",
+        tooltip = "This setting lets you modify the display text.\n\n"..
+					"This text will display when you are fighting a boss.\n\n"..
+					"<d> will be replaced with your overall DPS\n"..
+					"<D> will be replaced with your overall damage\n"..
+					"<b> will be replaced with your boss DPS\n"..
+					"<B> will be replaced with your overall damage to bosses\n"..
+					"<t> will be replaced with the fight time\n",
+        default = PDT.defaults.displayText_Boss,
+        setFunction = function(value)
+            PDT.savedVariables.displayText_Boss = value
+			
+			updateText()
+        end,
+        getFunction = function()
+            return PDT.savedVariables.displayText_Boss
+        end,
+        disable = function() return areSettingsDisabled end,
+    }
+	
 	local formatNumber = {
         type = LibHarvensAddonSettings.ST_DROPDOWN,
         label = "Format Number",
         tooltip = "Change the way that this addon will display large numbers.\n\n"..
-					"1: 134519 becomes 134,519 and 4149257 becomes 4,149,257\n\n"..
-					"2: 134519 becomes 134.5k and 4149257 becomes 4.149M\n\n"..
-					"3: 134519 becomes 134k and 4149257 becomes 4.1M",
+					"1: 134419 becomes 134,419 and 4149257 becomes 4,149,257\n\n"..
+					"2: 134419 becomes 134.4k and 4149257 becomes 4.149M\n\n"..
+					"3: 134419 becomes 134k and 4149257 becomes 4.1M",
         setFunction = function(combobox, name, item)
 			PDT.savedVariables.selectedFormatName = item.name
 			PDT.savedVariables.formatType = item.data
@@ -281,11 +313,11 @@ function PDT.Initialize()
         default = PDT.defaults.selectedFormatName,
         items = {
             {
-                name = "134,519",
+                name = "134,419",
                 data = 1
             },
             {
-                name = "134.5k",
+                name = "134.4k",
                 data = 2
             },
             {
@@ -475,7 +507,7 @@ function PDT.Initialize()
         disable = function() return areSettingsDisabled end,
     }
 	
-	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
+	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
 	
 	updateText()
 	
