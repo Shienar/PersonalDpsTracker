@@ -474,8 +474,8 @@ function PDT.Initialize()
             return PDT.savedVariables.offset_x
         end,
         default = 0,
-        min = -250,
-        max = 250,
+        min = -750,
+        max = 750,
         step = 5,
         unit = "", --optional unit
         format = "%d", --value format
@@ -499,8 +499,8 @@ function PDT.Initialize()
             return PDT.savedVariables.offset_y
         end,
         default = 0,
-        min = -250,
-        max = 250,
+        min = -750,
+        max = 750,
         step = 5,
         unit = "", --optional unit
         format = "%d", --value format
