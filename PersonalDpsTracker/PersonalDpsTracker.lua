@@ -101,9 +101,14 @@ local function updateText()
 	DpsIndicatorLabel:SetText(formattedString)
 end
 
+--A boss name could be both "Iron-Heel" or "Iron-Heel^M", so i gotta do some extra work.
 local function containsVal(table, val)
+	if string.find(val, "^", 1, true) ~= nil then val = string.sub(val, 1, (string.find(val, "^", 1, true) - 1)) end
+	
 	for k, v in pairs(table) do
-		if v == val then return true end
+		if v == val then 
+			return true 
+		end
 	end
 	return false
 end
@@ -112,7 +117,7 @@ end
 function PDT.onNewBosses(code, forceReset)
 	for i = 1, 12 do
 		local tempTag = "boss"..i
-		if DoesUnitExist(tempTag) then
+		if DoesUnitExist(tempTag) and containsVal(PDT.bossNames, GetUnitName(tempTag)) == false then
 			PDT.bossNames[#PDT.bossNames + 1] = GetUnitName(tempTag)
 		end
 	end
@@ -509,7 +514,10 @@ function PDT.Initialize()
 	
 	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
 	
+	PDT.onNewBosses(_, _)
+	
 	updateText()
+	
 	
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT.ChangePlayerCombatState)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT.OnCombatEvent)
