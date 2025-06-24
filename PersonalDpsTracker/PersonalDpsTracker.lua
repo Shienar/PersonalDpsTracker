@@ -16,6 +16,7 @@ PDT.defaults = {
 	checked = false,
 	offset_x = 0,
 	offset_y = 0,
+	experimentalFeatures = false
 }
 
 PDT.TotalDamage = 0
@@ -26,6 +27,7 @@ PDT.startTime = 0 --milliseconds
 PDT.endTime = 0 --milliseconds
 PDT.fightTime = function () return ((PDT.endTime-PDT.startTime)/1000) end --seconds
 PDT.bossNames = { }
+PDT.diedInCombat = false
 
 function PDT.formattedTime(s)
 	local minutes, seconds = math.floor(s/60), s%60
@@ -133,13 +135,47 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 	if inCombat then 
 		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
 	else
-		--Reset variables
-		PDT.startTime, PDT.endTime = 0, 0
-		PDT.TotalDamage = 0 
-		PDT.TotalDamage_Boss = 0
-		PDT.bossNames = { }
+		if PDT.savedVariables.experimentalFeatures == true then
+			--Don't reset variables if player died in combat.
+			zo_callLater(function() 
+				--IsUnitDead can be slow sometimes.
+				if IsUnitDead("player") then
+					--player died in combat.
+					--Reset values when they revive (if they revive out of combat).
+					PDT.diedInCombat = true
+					return
+				else
+					--Reset variables
+					PDT.startTime, PDT.endTime = 0, 0
+					PDT.TotalDamage = 0 
+					PDT.TotalDamage_Boss = 0
+					PDT.bossNames = { }
+				end
+			end, 1000)
+		else
+			--Reset variables
+			PDT.startTime, PDT.endTime = 0, 0
+			PDT.TotalDamage = 0 
+			PDT.TotalDamage_Boss = 0
+			PDT.bossNames = { }
+		end
 	end
 	
+end
+
+function PDT.OnRevive(code)
+	if PDT.diedInCombat == true then
+		zo_callLater(function()
+			if IsUnitInCombat("player") == false then
+				--Reset variables
+				PDT.startTime, PDT.endTime = 0, 0
+				PDT.TotalDamage = 0 
+				PDT.TotalDamage_Boss = 0
+				PDT.bossNames = { }
+			end
+			PDT.diedInCombat = false
+		end, 1000)
+	end
 end
 
 
@@ -220,12 +256,31 @@ function PDT.Initialize()
         disable = function() return areSettingsDisabled end,
     }
 	
+	local experimental = {
+        type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
+        label = "Enable experimental features.", 
+        tooltip = "Some features require testing on console before I can ensure their quality, so I'm giving you the choice to enable/disable them.\n\n\n"..
+					"Note: Enabling experimental features may cause issues with this addon and your game.\n\n"..
+					"Current features being tested:\n"..
+					"- Prevent timer from being reset if the player dies before a group fight ends.",
+        default = PDT.defaults.experimentalFeatures,
+        setFunction = function(state) 
+            PDT.savedVariables.experimentalFeatures = state
+        end,
+        getFunction = function() 
+            return PDT.savedVariables.experimentalFeatures
+        end,
+        disable = function() return areSettingsDisabled end,
+    }
+	
 	local resetDefaults = {
         type = LibHarvensAddonSettings.ST_BUTTON,
         label = "Reset Defaults",
         tooltip = "",
         buttonText = "RESET",
         clickHandler = function(control, button)
+			PDT.savedVariables.experimentalFeatures = PDT.defaults.experimentalFeatures
+		
 			PDT.savedVariables.colorR = PDT.defaults.colorR
 			PDT.savedVariables.colorG = PDT.defaults.colorG
 			PDT.savedVariables.colorB = PDT.defaults.colorB
@@ -512,7 +567,7 @@ function PDT.Initialize()
         disable = function() return areSettingsDisabled end,
     }
 	
-	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
+	settings:AddSettings({generalSection, toggle, experimental, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
 	
 	PDT.onNewBosses(_, _)
 	
@@ -522,6 +577,7 @@ function PDT.Initialize()
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT.ChangePlayerCombatState)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT.OnCombatEvent)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_BOSSES_CHANGED, PDT.onNewBosses)
+	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_ALIVE, PDT.OnRevive)
 end
 
 function PDT.OnAddOnLoaded(event, addonName)
