@@ -27,7 +27,6 @@ PDT.startTime = 0 --milliseconds
 PDT.endTime = 0 --milliseconds
 PDT.fightTime = function () return ((PDT.endTime-PDT.startTime)/1000) end --seconds
 PDT.bossNames = { }
-PDT.diedInCombat = false
 
 function PDT.formattedTime(s)
 	local minutes, seconds = math.floor(s/60), s%60
@@ -136,22 +135,25 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
 	else
 		if PDT.savedVariables.experimentalFeatures == true then
-			--Don't reset variables if player died in combat.
-			zo_callLater(function() 
-				--IsUnitDead can be slow sometimes.
-				if IsUnitDead("player") then
-					--player died in combat.
-					--Reset values when they revive (if they revive out of combat).
-					PDT.diedInCombat = true
-					return
-				else
-					--Reset variables
-					PDT.startTime, PDT.endTime = 0, 0
-					PDT.TotalDamage = 0 
-					PDT.TotalDamage_Boss = 0
-					PDT.bossNames = { }
+			local totalBossHP, totalMaxBossHP = 0
+			for i = 1, 12 do
+				local bossTag = "boss"..i
+				if DoesUnitExist(bossTag) then
+					local bossHP, maxBossHP, _ = GetUnitPower("player", COMBAT_MECHANIC_FLAGS_HEALTH)
+					totalBossHP = totalBossHP + bossHP
+					totalMaxBossHP = totalMaxBossHP + maxBossHP
 				end
-			end, 1000)
+			end
+			
+			local ratio = totalBossHP/totalMaxBossHP
+			if ratio <= 0 or ratio >= 1 then
+				--Boss is dead or not in combat.
+				--Reset variables
+				PDT.startTime, PDT.endTime = 0, 0
+				PDT.TotalDamage = 0 
+				PDT.TotalDamage_Boss = 0
+				PDT.bossNames = { }
+			end
 		else
 			--Reset variables
 			PDT.startTime, PDT.endTime = 0, 0
@@ -162,22 +164,6 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 	end
 	
 end
-
-function PDT.OnRevive(code)
-	if PDT.diedInCombat == true then
-		zo_callLater(function()
-			if IsUnitInCombat("player") == false then
-				--Reset variables
-				PDT.startTime, PDT.endTime = 0, 0
-				PDT.TotalDamage = 0 
-				PDT.TotalDamage_Boss = 0
-				PDT.bossNames = { }
-			end
-			PDT.diedInCombat = false
-		end, 1000)
-	end
-end
-
 
 function PDT.OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, abilityActionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, _log, sourceUnitID, targetUnitID, abilityID, overflow)
 	if (sourceType == 1 or sourceType == 2)  and (targetType == 0 or targetType == 4) and 
@@ -577,7 +563,6 @@ function PDT.Initialize()
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT.ChangePlayerCombatState)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT.OnCombatEvent)
 	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_BOSSES_CHANGED, PDT.onNewBosses)
-	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_ALIVE, PDT.OnRevive)
 end
 
 function PDT.OnAddOnLoaded(event, addonName)
