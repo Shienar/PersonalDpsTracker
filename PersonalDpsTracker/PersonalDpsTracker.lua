@@ -134,47 +134,39 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 		PDT.activeCombat = inCombat 
 		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
 	else
-		if PDT.savedVariables.experimentalFeatures == true then
-			zo_callLater(function ()
-				local totalBossHP, totalMaxBossHP = 0, 0
-				for i = 1, 12 do
-					local bossTag = "boss"..i
-					if DoesUnitExist(bossTag) then
-						local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
-						totalBossHP = totalBossHP + bossHP
-						totalMaxBossHP = totalMaxBossHP + maxBossHP
-					end
+		zo_callLater(function ()
+			local totalBossHP, totalMaxBossHP = 0, 0
+			for i = 1, 12 do
+				local bossTag = "boss"..i
+				if DoesUnitExist(bossTag) then
+					local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
+					totalBossHP = totalBossHP + bossHP
+					totalMaxBossHP = totalMaxBossHP + maxBossHP
 				end
-				
-				if totalMaxBossHP > 0 then
-					local ratio = totalBossHP/totalMaxBossHP
-					if ratio <= 0 or ratio >= 1 then
-						--Boss is dead or reset (group wipe)
-						--Reset variables
-						PDT.activeCombat = inCombat 
-						PDT.startTime, PDT.endTime = 0, 0
-						PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
-						PDT.bossNames = { }
-					else
-						--player is dead but boss isn't
-						PDT.deadOnBoss = true
-					end
-				else
-					--Not a boss fight.
+			end
+			
+			if totalMaxBossHP > 0 then
+				local ratio = totalBossHP/totalMaxBossHP
+				if ratio <= 0 or ratio >= 1 then
+					--Boss is dead or reset (group wipe)
 					--Reset variables
 					PDT.activeCombat = inCombat 
 					PDT.startTime, PDT.endTime = 0, 0
 					PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
-					PDT.bossNames = { }	
+					PDT.bossNames = { }
+				else
+					--player is dead but boss isn't
+					PDT.deadOnBoss = true
 				end
-			end, 500)
-		else
-			--Reset variables
-			PDT.activeCombat = inCombat 
-			PDT.startTime, PDT.endTime = 0, 0
-			PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
-			PDT.bossNames = { }
-		end
+			else
+				--Not a boss fight.
+				--Reset variables
+				PDT.activeCombat = inCombat 
+				PDT.startTime, PDT.endTime = 0, 0
+				PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
+				PDT.bossNames = { }	
+			end
+		end, 500)
 	end
 	
 end
@@ -185,7 +177,7 @@ function PDT.onRevive(code)
 		--player respawned
 		--player isn't in combat 2.5s later.
 		--Assume boss is dead and reset variables.
-	if PDT.savedVariables.experimentalFeatures and PDT.deadOnBoss then
+	if PDT.deadOnBoss then
 		zo_callLater(function ()
 			PDT.deadOnBoss = false
 			PDT.startTime, PDT.endTime = 0, 0
@@ -276,11 +268,10 @@ function PDT.Initialize()
 	local experimental = {
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Enable experimental features.", 
-        tooltip = "Some features require testing on console before I can ensure their quality, so I'm giving you the choice to enable/disable them.\n\n\n"..
+        tooltip = "Some features require testing on console before I can ensure their quality, so I'm giving you the choice to enable/disable them.\n\n"..
 					"Note: Enabling experimental features may cause issues with this addon and your game.\n\n"..
 					"Current features being tested:\n"..
-					"- Prevent timer from being reset if the player dies before a group fight ends.\n"..
-					"- Reset timer if player is dead when the boss dies.",
+					"- N/A (This option currently has no effect)",
         default = PDT.defaults.experimentalFeatures,
         setFunction = function(state) 
             PDT.savedVariables.experimentalFeatures = state
