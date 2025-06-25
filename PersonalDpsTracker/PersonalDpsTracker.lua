@@ -129,9 +129,10 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 	--inCombat == true if the player just entered combat.
 	--inCombat == false if the player just exited combat.
 	
+	PDT.activeCombat = inCombat 
+	
 	if inCombat then 
 		PDT.deadOnBoss = false
-		PDT.activeCombat = inCombat 
 		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
 	else
 		zo_callLater(function ()
@@ -150,7 +151,6 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 				if ratio <= 0 or ratio >= 1 then
 					--Boss is dead or reset (group wipe)
 					--Reset variables
-					PDT.activeCombat = inCombat 
 					PDT.startTime, PDT.endTime = 0, 0
 					PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
 					PDT.bossNames = { }
@@ -161,7 +161,6 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 			else
 				--Not a boss fight.
 				--Reset variables
-				PDT.activeCombat = inCombat 
 				PDT.startTime, PDT.endTime = 0, 0
 				PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
 				PDT.bossNames = { }	
