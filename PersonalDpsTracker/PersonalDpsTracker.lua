@@ -114,7 +114,6 @@ local function containsVal(table, val)
 	return false
 end
 
-
 function PDT.onNewBosses(code, forceReset)
 	for i = 1, 12 do
 		local tempTag = "boss"..i
@@ -133,6 +132,8 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 	if inCombat then 
 		PDT.deadOnBoss = false
 		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
+		
+		PDT.onNewBosses(_, _) --Z'maja doesn't trigger the event.
 	else
 		zo_callLater(function ()
 			local totalBossHP, totalMaxBossHP = 0, 0
