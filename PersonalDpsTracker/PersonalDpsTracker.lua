@@ -16,7 +16,6 @@ PDT.defaults = {
 	checked = false,
 	offset_x = 0,
 	offset_y = 0,
-	experimentalFeatures = false
 }
 
 PDT.TotalDamage = 0
@@ -115,7 +114,6 @@ local function containsVal(table, val)
 	return false
 end
 
-
 function PDT.onNewBosses(code, forceReset)
 	for i = 1, 12 do
 		local tempTag = "boss"..i
@@ -134,6 +132,9 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 	if inCombat then 
 		PDT.deadOnBoss = false
 		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
+		
+		 --Z'maja doesn't trigger the event, so I'm checking for bosses at the start of combat.
+		PDT.onNewBosses(_, _)
 	else
 		zo_callLater(function ()
 			local totalBossHP, totalMaxBossHP = 0, 0
@@ -226,6 +227,14 @@ function PDT.OnCombatEvent(eventCode, result, isError, abilityName, abilityGraph
 	end
 end
 
+local function fragmentChange(oldState, newState)
+	if newState == SCENE_FRAGMENT_SHOWN then
+		DpsIndicator:SetHidden(PDT.savedVariables.checked)
+	elseif newState == SCENE_FRAGMENT_HIDDEN then
+		DpsIndicator:SetHidden(true)
+	end
+end
+
 function PDT.Initialize()
 	PDT.activeCombat = IsUnitInCombat("player")
 	
@@ -240,6 +249,7 @@ function PDT.Initialize()
 	DpsIndicatorLabel:ClearAnchors()
 	DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 	
+	HUD_FRAGMENT:RegisterCallback("StateChange", fragmentChange)
 	
 	--Settings
 	local settings = LibHarvensAddonSettings:AddAddon("Personal Dps Tracker")
@@ -249,6 +259,8 @@ function PDT.Initialize()
 	local textSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Text",}
 	local positionSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Position",}
 	
+	local changeCounter = 0
+	
 	local toggle = {
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Hide Tracker?", 
@@ -257,26 +269,24 @@ function PDT.Initialize()
         setFunction = function(state) 
             PDT.savedVariables.checked = state
 			DpsIndicator:SetHidden(state)
+			
+			if state ==  false then
+				--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+				DpsIndicator:SetHidden(false)
+				changeCounter = changeCounter + 1
+				local changeNum = changeCounter
+				zo_callLater(function()
+					if changeNum == changeCounter then
+						changeCounter = 0
+						if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+							DpsIndicator:SetHidden(true)
+						end
+					end
+				end, 5000)
+			end
         end,
         getFunction = function() 
             return PDT.savedVariables.checked
-        end,
-        disable = function() return areSettingsDisabled end,
-    }
-	
-	local experimental = {
-        type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
-        label = "Enable experimental features.", 
-        tooltip = "Some features require testing on console before I can ensure their quality, so I'm giving you the choice to enable/disable them.\n\n"..
-					"Note: Enabling experimental features may cause issues with this addon and your game.\n\n"..
-					"Current features being tested:\n"..
-					"- N/A (This option currently has no effect)",
-        default = PDT.defaults.experimentalFeatures,
-        setFunction = function(state) 
-            PDT.savedVariables.experimentalFeatures = state
-        end,
-        getFunction = function() 
-            return PDT.savedVariables.experimentalFeatures
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -287,8 +297,6 @@ function PDT.Initialize()
         tooltip = "",
         buttonText = "RESET",
         clickHandler = function(control, button)
-			PDT.savedVariables.experimentalFeatures = PDT.defaults.experimentalFeatures
-		
 			PDT.savedVariables.colorR = PDT.defaults.colorR
 			PDT.savedVariables.colorG = PDT.defaults.colorG
 			PDT.savedVariables.colorB = PDT.defaults.colorB
@@ -316,6 +324,19 @@ function PDT.Initialize()
 			PDT.savedVariables.formatType = PDT.defaults.formatType
 			PDT.savedVariables.selectedFormatName = PDT.defaults.selectedFormatName
 			updateText()
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
 		end,
         disable = function() return areSettingsDisabled end,
     }
@@ -335,6 +356,19 @@ function PDT.Initialize()
             PDT.savedVariables.displayText = value
 			
 			updateText()
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
         end,
         getFunction = function()
             return PDT.savedVariables.displayText
@@ -357,6 +391,19 @@ function PDT.Initialize()
             PDT.savedVariables.displayText_Boss = value
 			
 			updateText()
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
         end,
         getFunction = function()
             return PDT.savedVariables.displayText_Boss
@@ -374,6 +421,19 @@ function PDT.Initialize()
         setFunction = function(combobox, name, item)
 			PDT.savedVariables.selectedFormatName = item.name
 			PDT.savedVariables.formatType = item.data
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
         end,
         getFunction = function()
             return PDT.savedVariables.selectedFormatName
@@ -404,7 +464,20 @@ function PDT.Initialize()
             PDT.savedVariables.colorR, PDT.savedVariables.colorG, PDT.savedVariables.colorB, PDT.savedVariables.colorA = ...
 			DpsIndicatorLabel:SetColor(PDT.savedVariables.colorR, PDT.savedVariables.colorG, PDT.savedVariables.colorB)
 			DpsIndicatorLabel:SetAlpha(PDT.savedVariables.colorA)
-        end,
+        
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
+		end,
         default = {PDT.defaults.colorR, PDT.defaults.colorG, PDT.defaults.colorB, PDT.defaults.colorA},
         getFunction = function()
             return PDT.savedVariables.colorR, PDT.savedVariables.colorG, PDT.savedVariables.colorB, PDT.savedVariables.colorA
@@ -420,6 +493,19 @@ function PDT.Initialize()
 			DpsIndicatorLabel:SetFont(item.data)
 			PDT.savedVariables.selectedText_font = name
 			PDT.savedVariables.selectedFont = item.data
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
         end,
         getFunction = function()
             return PDT.savedVariables.selectedText_font
@@ -479,7 +565,20 @@ function PDT.Initialize()
 			DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 			DpsIndicatorLabel:ClearAnchors()
 			DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
-        end,
+        
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
+		end,
         getFunction = function()
             return PDT.savedVariables.selectedText_pos
         end,
@@ -537,7 +636,20 @@ function PDT.Initialize()
 			DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 			DpsIndicatorLabel:ClearAnchors()
 			DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
-        end,
+        
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
+		end,
         getFunction = function()
             return PDT.savedVariables.offset_x
         end,
@@ -562,7 +674,20 @@ function PDT.Initialize()
 			DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 			DpsIndicatorLabel:ClearAnchors()
 			DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
-        end,
+        
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
+		end,
         getFunction = function()
             return PDT.savedVariables.offset_y
         end,
@@ -575,7 +700,7 @@ function PDT.Initialize()
         disable = function() return areSettingsDisabled end,
     }
 	
-	settings:AddSettings({generalSection, toggle, experimental, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
+	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
 	
 	PDT.onNewBosses(_, _)
 	
