@@ -18,27 +18,28 @@ PDT.defaults = {
 	offset_y = 0,
 }
 
-PDT.TotalDamage = 0
-PDT.PreCombatDamage = 0
-PDT.TotalDamage_Boss = 0
-PDT.PreCombatDamage_Boss = 0
-PDT.startTime = 0 --milliseconds
-PDT.endTime = 0 --milliseconds
-PDT.fightTime = function () return ((PDT.endTime-PDT.startTime)/1000) end --seconds
-PDT.bossNames = { }
-PDT.deadOnBoss = false
+local PDT_activeCombat = false
+local PDT_TotalDamage = 0
+local PDT_PreCombatDamage = 0
+local PDT_TotalDamage_Boss = 0
+local PDT_PreCombatDamage_Boss = 0
+local PDT_startTime = 0 --milliseconds
+local PDT_endTime = 0 --milliseconds
+local PDT_fightTime = function () return ((PDT_endTime-PDT_startTime)/1000) end --seconds
+local PDT_bossNames = { }
+local PDT_deadOnBoss = false
 
-function PDT.formattedTime(s)
+local function PDT_formattedTime(s)
 	local minutes, seconds = math.floor(s/60), s%60
 	if seconds < 10 then return minutes..":0"..seconds end
 	return minutes..":"..seconds
 end
 
-function PDT.getRawDPS(damage, duration) 
+local function PDT_getRawDPS(damage, duration) 
 	return damage/duration
 end
 
-function PDT.formatNumber(number)
+local function PDT_formatNumber(number)
 	--input examples: 134519.165 dps or 4149256 damage
 	if PDT.savedVariables.formatType == 1 then
 		--134,419
@@ -76,34 +77,34 @@ function PDT.formatNumber(number)
 	return -1
 end
 	
-local function updateText()
+local function PDT_updateText()
 	local formattedString = ""
 	
-	if #PDT.bossNames == 0 then
+	if #PDT_bossNames == 0 then
 		 formattedString = PDT.savedVariables.displayText
 	else
 		formattedString = PDT.savedVariables.displayText_Boss
 	end
 	
-	if PDT.TotalDamage_Boss ~= 0 then 
-		formattedString = string.gsub(formattedString, "<b>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage_Boss, PDT.fightTime()))))
+	if PDT_TotalDamage_Boss ~= 0 then 
+		formattedString = string.gsub(formattedString, "<b>", tostring(PDT_formatNumber(PDT_getRawDPS(PDT_TotalDamage_Boss, PDT_fightTime()))))
 	else
 		formattedString = string.gsub(formattedString, "<b>", "0k")
 	end
-	formattedString = string.gsub(formattedString, "<B>", tostring(PDT.formatNumber(PDT.TotalDamage_Boss)))
-	if PDT.TotalDamage ~= 0 then
-		formattedString = string.gsub(formattedString, "<d>", tostring(PDT.formatNumber(PDT.getRawDPS(PDT.TotalDamage, PDT.fightTime()))))
+	formattedString = string.gsub(formattedString, "<B>", tostring(PDT_formatNumber(PDT_TotalDamage_Boss)))
+	if PDT_TotalDamage ~= 0 then
+		formattedString = string.gsub(formattedString, "<d>", tostring(PDT_formatNumber(PDT_getRawDPS(PDT_TotalDamage, PDT_fightTime()))))
 	else
 		formattedString = string.gsub(formattedString, "<d>", "0k")
 	end
-	formattedString = string.gsub(formattedString, "<D>", tostring(PDT.formatNumber(PDT.TotalDamage)))
-	formattedString = string.gsub(formattedString, "<t>", tostring(PDT.formattedTime(math.floor(PDT.fightTime()))))
+	formattedString = string.gsub(formattedString, "<D>", tostring(PDT_formatNumber(PDT_TotalDamage)))
+	formattedString = string.gsub(formattedString, "<t>", tostring(PDT_formattedTime(math.floor(PDT_fightTime()))))
 			
 	DpsIndicatorLabel:SetText(formattedString)
 end
 
 --A boss name could be both "Iron-Heel" or "Iron-Heel^M", so i gotta do some extra work.
-local function containsVal(table, val)
+local function PDT_containsVal(table, val)
 	if string.find(val, "^", 1, true) ~= nil then val = string.sub(val, 1, (string.find(val, "^", 1, true) - 1)) end
 	
 	for k, v in pairs(table) do
@@ -114,27 +115,27 @@ local function containsVal(table, val)
 	return false
 end
 
-function PDT.onNewBosses(code, forceReset)
+local function PDT_onNewBosses(code, forceReset)
 	for i = 1, 12 do
 		local tempTag = "boss"..i
-		if DoesUnitExist(tempTag) and containsVal(PDT.bossNames, GetUnitName(tempTag)) == false then
-			PDT.bossNames[#PDT.bossNames + 1] = GetUnitName(tempTag)
+		if DoesUnitExist(tempTag) and PDT_containsVal(PDT_bossNames, GetUnitName(tempTag)) == false then
+			PDT_bossNames[#PDT_bossNames + 1] = GetUnitName(tempTag)
 		end
 	end
 end
 
-function PDT.ChangePlayerCombatState(event, inCombat)
+local function PDT_ChangePlayerCombatState(event, inCombat)
 	--inCombat == true if the player just entered combat.
 	--inCombat == false if the player just exited combat.
 	
-	PDT.activeCombat = inCombat 
+	PDT_activeCombat = inCombat 
 	
 	if inCombat then 
-		PDT.deadOnBoss = false
-		if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
+		PDT_deadOnBoss = false
+		if PDT_startTime == 0 then PDT_startTime = GetGameTimeMilliseconds() end
 		
 		 --Z'maja doesn't trigger the event, so I'm checking for bosses at the start of combat.
-		PDT.onNewBosses(_, _)
+		PDT_onNewBosses(_, _)
 	else
 		zo_callLater(function ()
 			local totalBossHP, totalMaxBossHP = 0, 0
@@ -152,43 +153,42 @@ function PDT.ChangePlayerCombatState(event, inCombat)
 				if ratio <= 0 or ratio >= 1 then
 					--Boss is dead or reset (group wipe)
 					--Reset variables
-					PDT.startTime, PDT.endTime = 0, 0
-					PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
-					PDT.bossNames = { }
+					PDT_startTime, PDT_endTime = 0, 0
+					PDT_TotalDamage, PDT_TotalDamage_Boss = 0, 0
+					PDT_bossNames = { }
 				else
 					--player is dead but boss isn't
-					PDT.deadOnBoss = true
+					PDT_deadOnBoss = true
 				end
 			else
 				--Not a boss fight.
 				--Reset variables
-				PDT.startTime, PDT.endTime = 0, 0
-				PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
-				PDT.bossNames = { }	
+				PDT_startTime, PDT_endTime = 0, 0
+				PDT_TotalDamage, PDT_TotalDamage_Boss = 0, 0
+				PDT_bossNames = { }	
 			end
 		end, 500)
 	end
 	
 end
 
-function PDT.onRevive(code)
+local function PDT_onRevive(code)
 	--Timeline:
 		--player died during boss
 		--player respawned
 		--player isn't in combat 2.5s later.
 		--Assume boss is dead and reset variables.
-	if PDT.deadOnBoss then
+	if PDT_deadOnBoss then
 		zo_callLater(function ()
-			PDT.deadOnBoss = false
-			PDT.startTime, PDT.endTime = 0, 0
-			PDT.TotalDamage, PDT.TotalDamage_Boss = 0, 0
-			PDT.bossNames = { }
+			PDT_deadOnBoss = false
+			PDT_startTime, PDT_endTime = 0, 0
+			PDT_TotalDamage, PDT_TotalDamage_Boss = 0, 0
+			PDT_bossNames = { }
 		end, 2500)
 	end
 end
 
-
-function PDT.OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, abilityActionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, _log, sourceUnitID, targetUnitID, abilityID, overflow)
+local function PDT_OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, abilityActionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, _log, sourceUnitID, targetUnitID, abilityID, overflow)
 	if (sourceType == 1 or sourceType == 2)  and (targetType == 0 or targetType == 4) and 
 		( result == ACTION_RESULT_DOT_TICK or
 		  result == ACTION_RESULT_DOT_TICK_CRITICAL  or
@@ -203,31 +203,31 @@ function PDT.OnCombatEvent(eventCode, result, isError, abilityName, abilityGraph
 		--Damage from player to NPC or player pet to NPCs
 		
 		--This event can happen before the combat event, so I'm accounting for the minimal amount of damage the player might deal inbetween.
-		if PDT.activeCombat == false then
-			PDT.PreCombatDamage = PDT.PreCombatDamage + hitValue
-			if containsVal(PDT.bossNames, targetName) then PDT.PreCombatDamage_Boss = PDT.PreCombatDamage_Boss + hitValue end
-			if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
+		if PDT_activeCombat == false then
+			PDT_PreCombatDamage = PDT_PreCombatDamage + hitValue
+			if PDT_containsVal(PDT_bossNames, targetName) then PDT_PreCombatDamage_Boss = PDT_PreCombatDamage_Boss + hitValue end
+			if PDT_startTime == 0 then PDT_startTime = GetGameTimeMilliseconds() end
 		else 
-			if PDT.PreCombatDamage ~= 0 then
-				PDT.TotalDamage = PDT.TotalDamage + PDT.PreCombatDamage
-				PDT.TotalDamage_Boss = PDT.TotalDamage_Boss + PDT.PreCombatDamage_Boss
-				PDT.PreCombatDamage = 0
-				PDT.PreCombatDamage_Boss = 0
+			if PDT_PreCombatDamage ~= 0 then
+				PDT_TotalDamage = PDT_TotalDamage + PDT_PreCombatDamage
+				PDT_TotalDamage_Boss = PDT_TotalDamage_Boss + PDT_PreCombatDamage_Boss
+				PDT_PreCombatDamage = 0
+				PDT_PreCombatDamage_Boss = 0
 			end
 			
-			if PDT.startTime == 0 then PDT.startTime = GetGameTimeMilliseconds() end
+			if PDT_startTime == 0 then PDT_startTime = GetGameTimeMilliseconds() end
 			
-			PDT.TotalDamage = PDT.TotalDamage + hitValue
-			if containsVal(PDT.bossNames, targetName) then PDT.TotalDamage_Boss = PDT.TotalDamage_Boss + hitValue end
+			PDT_TotalDamage = PDT_TotalDamage + hitValue
+			if PDT_containsVal(PDT_bossNames, targetName) then PDT_TotalDamage_Boss = PDT_TotalDamage_Boss + hitValue end
 			
-			PDT.endTime = GetGameTimeMilliseconds()
+			PDT_endTime = GetGameTimeMilliseconds()
 			
-			updateText()
+			PDT_updateText()
 		end
 	end
 end
 
-local function fragmentChange(oldState, newState)
+local function PDT_fragmentChange(oldState, newState)
 	if newState == SCENE_FRAGMENT_SHOWN then
 		DpsIndicator:SetHidden(PDT.savedVariables.checked)
 	elseif newState == SCENE_FRAGMENT_HIDDEN then
@@ -236,7 +236,7 @@ local function fragmentChange(oldState, newState)
 end
 
 function PDT.Initialize()
-	PDT.activeCombat = IsUnitInCombat("player")
+	PDT_activeCombat = IsUnitInCombat("player")
 	
 	--Load and apply saved variables
 	PDT.savedVariables = ZO_SavedVars:NewAccountWide("PDTSavedVariables", 1, nil, PDT.defaults, GetWorldName())
@@ -249,7 +249,7 @@ function PDT.Initialize()
 	DpsIndicatorLabel:ClearAnchors()
 	DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 	
-	HUD_FRAGMENT:RegisterCallback("StateChange", fragmentChange)
+	HUD_FRAGMENT:RegisterCallback("StateChange", PDT_fragmentChange)
 	
 	--Settings
 	local settings = LibHarvensAddonSettings:AddAddon("Personal Dps Tracker")
@@ -323,7 +323,7 @@ function PDT.Initialize()
 			
 			PDT.savedVariables.formatType = PDT.defaults.formatType
 			PDT.savedVariables.selectedFormatName = PDT.defaults.selectedFormatName
-			updateText()
+			PDT_updateText()
 			
 			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
 			DpsIndicator:SetHidden(false)
@@ -355,7 +355,7 @@ function PDT.Initialize()
         setFunction = function(value)
             PDT.savedVariables.displayText = value
 			
-			updateText()
+			PDT_updateText()
 			
 			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
 			DpsIndicator:SetHidden(false)
@@ -390,7 +390,7 @@ function PDT.Initialize()
         setFunction = function(value)
             PDT.savedVariables.displayText_Boss = value
 			
-			updateText()
+			PDT_updateText()
 			
 			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
 			DpsIndicator:SetHidden(false)
@@ -702,15 +702,14 @@ function PDT.Initialize()
 	
 	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, dropdown_pos, slider_x, slider_y})
 	
-	PDT.onNewBosses(_, _)
+	PDT_onNewBosses(_, _)
 	
-	updateText()
+	PDT_updateText()
 	
-	
-	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT.ChangePlayerCombatState)
-	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT.OnCombatEvent)
-	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_BOSSES_CHANGED, PDT.onNewBosses)
-	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_ALIVE, PDT.onRevive)
+	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_COMBAT_STATE, PDT_ChangePlayerCombatState)
+	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_COMBAT_EVENT, PDT_OnCombatEvent)
+	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_BOSSES_CHANGED, PDT_onNewBosses)
+	EVENT_MANAGER:RegisterForEvent(PDT.name, EVENT_PLAYER_ALIVE, PDT_onRevive)
 end
 
 function PDT.OnAddOnLoaded(event, addonName)
