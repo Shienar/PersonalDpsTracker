@@ -246,8 +246,6 @@ function PDT.Initialize()
 	DpsIndicatorLabel:SetFont(PDT.savedVariables.selectedFont)
 	DpsIndicator:ClearAnchors()
 	DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
-	DpsIndicatorLabel:ClearAnchors()
-	DpsIndicatorLabel:SetAnchor(PDT.savedVariables.selectedPos, DpsIndicator, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
 	
 	HUD_FRAGMENT:RegisterCallback("StateChange", PDT_fragmentChange)
 	
