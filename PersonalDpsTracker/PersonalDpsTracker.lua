@@ -553,7 +553,7 @@ function PDT.Initialize()
 	PDT.currentlyChangingPosition = false
 	local repositionUI = {
 		type = LibHarvensAddonSettings.ST_CHECKBOX,
-		label = "Reposition UI",
+		label = "Joystick Reposition",
 		tooltip = "When enabled, you will be able to freely move around the UI with your right joystick.\n\nSet this to OFF after configuring position.",
 		getFunction = function() return PDT.currentlyChangingPosition end,
 		setFunction = function(value) 
@@ -595,7 +595,81 @@ function PDT.Initialize()
 		default = PDT.currentlyChangingPosition
 	}
 
-	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, repositionUI})
+	--x position offset
+	local slider_x = {
+        type = LibHarvensAddonSettings.ST_SLIDER,
+        label = "X Offset",
+        tooltip = "",
+        setFunction = function(value)
+			PDT.savedVariables.offset_x = value
+			if PDT.savedVariables.selectedPos ~= 3 then PDT.savedVariables.selectedPos = 3 end
+			
+			DpsIndicator:ClearAnchors()
+			DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
+		end,
+        getFunction = function()
+            return PDT.savedVariables.offset_x
+        end,
+        default = 0,
+        min = 0,
+        max = GuiRoot:GetWidth(),
+        step = 5,
+        unit = "", --optional unit
+        format = "%d", --value format
+        disable = function() return areSettingsDisabled end,
+    }
+	
+	--y position offset
+	local slider_y = {
+        type = LibHarvensAddonSettings.ST_SLIDER,
+        label = "Y Offset",
+        tooltip = "",
+        setFunction = function(value)
+			PDT.savedVariables.offset_y = value
+			if PDT.savedVariables.selectedPos ~= 3 then PDT.savedVariables.selectedPos = 3 end
+			
+			DpsIndicator:ClearAnchors()
+			DpsIndicator:SetAnchor(PDT.savedVariables.selectedPos, GuiRoot, PDT.savedVariables.selectedPos, PDT.savedVariables.offset_x, PDT.savedVariables.offset_y)
+			
+			--Hide UI 5 seconds after most recent change. multiple changes can be queued.
+			DpsIndicator:SetHidden(false)
+			changeCounter = changeCounter + 1
+			local changeNum = changeCounter
+			zo_callLater(function()
+				if changeNum == changeCounter then
+					changeCounter = 0
+					if SCENE_MANAGER:GetScene("hud"):GetState() == SCENE_HIDDEN or PDT.savedVariables.checked then
+						DpsIndicator:SetHidden(true)
+					end
+				end
+			end, 5000)
+		end,
+        getFunction = function()
+            return PDT.savedVariables.offset_y
+        end,
+        default = 0,
+        min = 0,
+        max = GuiRoot:GetHeight(),
+        step = 5,
+        unit = "", --optional unit
+        format = "%d", --value format
+        disable = function() return areSettingsDisabled end,
+    }
+
+	settings:AddSettings({generalSection, toggle, resetDefaults, textSection, editText, editText_Boss, formatNumber, dropdown_font, color, positionSection, repositionUI, slider_x, slider_y})
 	
 	PDT_onNewBosses(_, _)
 	
