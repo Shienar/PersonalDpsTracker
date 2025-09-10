@@ -562,7 +562,7 @@ function PDT.Initialize()
 				DpsIndicator:SetHidden(false)
 				EVENT_MANAGER:RegisterForUpdate(PDT.name.."AdjustUI", 10,  function() 
 					if PDT.savedVariables.selectedPos ~= 3 then PDT.savedVariables.selectedPos = 3 end
-					local posX, posY = GetGamepadRightStickX(), GetGamepadRightStickY()
+					local posX, posY = GetGamepadRightStickX(true), GetGamepadRightStickY(true)
 					if posX ~= 0 or posY ~= 0 then 
 						PDT.savedVariables.offset_x = PDT.savedVariables.offset_x + 10*posX
 						PDT.savedVariables.offset_y = PDT.savedVariables.offset_y - 10*posY
