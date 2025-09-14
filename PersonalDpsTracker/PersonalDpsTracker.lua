@@ -452,11 +452,11 @@ function PDT.updateBannerText()
 		DMGTypeBreakdownMagical:SetText("Magic: "..math.floor((dmgTypes.magicalDMG/TotalDamage)*100).."%")
 		DMGTypeBreakdownArea:SetText("Area: "..math.floor((dmgTypes.areaDMG/TotalDamage)*100).."%")
 	elseif #bossNames ~= 0 and TotalDamage_Boss ~= 0 then
-		DMGTypeBreakdownDirect:SetText("Direct: "..math.floor((dmgTypes_Boss.directDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.directDMG/TotalDamage)*100)..")")
-		DMGTypeBreakdownDOT:SetText("DOT: "..math.floor((dmgTypes_Boss.dotDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.dotDMG/TotalDamage)*100)..")")
-		DMGTypeBreakdownMartial:SetText("Martial: "..math.floor((dmgTypes_Boss.martialDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.martialDMG/TotalDamage)*100)..")")
-		DMGTypeBreakdownMagical:SetText("Magic: "..math.floor((dmgTypes_Boss.magicalDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.magicalDMG/TotalDamage)*100)..")")
-		DMGTypeBreakdownArea:SetText("Area: "..math.floor((dmgTypes_Boss.areaDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.areaDMG/TotalDamage)*100)..")")
+		DMGTypeBreakdownDirect:SetText("Direct: "..math.floor((dmgTypes_Boss.directDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.directDMG/TotalDamage)*100).."%)")
+		DMGTypeBreakdownDOT:SetText("DOT: "..math.floor((dmgTypes_Boss.dotDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.dotDMG/TotalDamage)*100).."%)")
+		DMGTypeBreakdownMartial:SetText("Martial: "..math.floor((dmgTypes_Boss.martialDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.martialDMG/TotalDamage)*100).."%)")
+		DMGTypeBreakdownMagical:SetText("Magic: "..math.floor((dmgTypes_Boss.magicalDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.magicalDMG/TotalDamage)*100).."%)")
+		DMGTypeBreakdownArea:SetText("Area: "..math.floor((dmgTypes_Boss.areaDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.areaDMG/TotalDamage)*100).."%)")
 	else
 		DMGTypeBreakdownDirect:SetText("Direct: 0%")
 		DMGTypeBreakdownDOT:SetText("DOT: 0%")
@@ -843,7 +843,7 @@ function PDT.Initialize()
 	local generalSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "General",}
 	local textSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Text",}
 	local positionSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Position",}
-	local bannerSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Banner Damage Types",}
+	local bannerSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "(BETA) Damage Types",}
 	
 	local changeCounter = 0
 	local changeCounter_Banner = 0
@@ -1270,7 +1270,7 @@ function PDT.Initialize()
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Hide Damage Type Breakdown?",
         tooltip = "Disables the damagetype breakdown for banner focus scripts when set to \"On\"\n\n"..
-			"Note: When two percentages are visible, the leftmost one is for boss damage and the rightmost one is for overal damage.",
+			"Note: When two percentages are visible, the leftmost one is for boss damage and the rightmost one is for overall damage.",
         default = PDT.defaults.banner_hidden,
         setFunction = function(state) 
             PDT.savedVariables.banner_hidden = state
