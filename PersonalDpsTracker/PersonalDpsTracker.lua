@@ -41,328 +41,468 @@ local dmgTypes_Boss = {
 	areaDMG = 0,
 }
 
---The IDs are documented better in an excel file within the github.
---These abilityIDs are buffed by the AOE dmg banner.
---They are stored this way to allow for a fast binary search.
---A table with these values as keys would take up a lot of space as a hash table.
+--See https://github.com/Shienar/AreaDamage for more documentation.
 local areaIDs = {
-    7102,
-    15959,
-    17875,
-    17979,
-    19128,
-    20245,
-    20251,
-    20252,
-    20917,
-    20919,
-    20930,
-    20944,
-    21732,
-    21753,
-    21756,
-    21759,
-    22138,
-    22139,
-    22144,
-    22165,
-    22178,
-    22181,
-    22182,
-    23189,
-    23202,
-    23208,
-    23211,
-    23214,
-    23232,
-    23239,
-    23659,
-    23664,
-    23667,
-    24327,
-    24329,
-    24331,
-    24798,
-    25091,
-    25170,
-    25494,
-    26192,
-    26859,
-    26871,
-    26879,
-    28309,
-    28591,
-    28794,
-    28798,
-    28877,
-    28995,
-    29014,
-    29529,
-    29809,
-    31540,
-    31604,
-    31635,
-    31837,
-    31842,
-    32711,
-    32714,
-    32716,
-    32720,
-    32785,
-    32787,
-    32792,
-    32794,
-    32948,
-    32960,
-    33316,
-    33497,
-    34404,
-    34502,
-    35460,
-    35713,
-    36052,
-    36490,
-    36891,
-    36901,
-    38561,
-    38690,
-    38696,
-    38722,
-    38723,
-    38724,
-    38745,
-    38754,
-    38792,
-    38823,
-    38861,
-    38891,
-    38935,
-    38968,
-    39054,
-    39056,
-    39071,
-    39072,
-    39079,
-    39080,
-    39149,
-    39151,
-    39153,
-    39299,
-    40158,
-    40161,
-    40252,
-    40267,
-    40300,
-    40416,
-    40469,
-    40473,
-    41839,
-    42029,
-    44426,
-    44432,
-    44436,
-    44483,
-    44491,
-    50992,
-    57209,
-    58855,
-    58864,
-    58879,
-    59498,
-    59593,
-    59696,
-    61273,
-    61488,
-    61493,
-    61502,
-    62522,
-    62529,
-    62547,
-    62550,
-    62598,
-    62606,
-    62896,
-    62931,
-    62971,
-    63429,
-    63454,
-    63457,
-    63471,
-    63474,
-    67136,
-    71646,
-    71658,
-    75692,
-    75752,
-    76344,
-    77186,
-    80083,
-    80107,
-    80129,
-    80172,
-    80435,
-    80521,
-    80522,
-    80526,
-    80544,
-    80561,
-    80565,
-    80865,
-    83409,
-    83626,
-    83629,
-    83631,
-    83683,
-    83685,
-    83687,
-    84355,
-    84502,
-    85127,
-    85129,
-    85131,
-    85432,
-    86156,
-    86247,
-    88783,
-    88791,
-    88802,
-    88860,
-    88863,
-    89128,
-    89220,
-    93307,
-    94411,
-    94424,
-    94445,
-    95931,
-    95955,
-    97574,
-    97716,
-    100218,
-    102094,
-    102136,
-    105907,
-    108844,
-    108936,
-    114798,
-    115115,
-    115254,
-    115572,
-    116410,
-    116920,
-    117715,
-    117809,
-    117854,
-    118011,
-    118223,
-    118266,
-    118289,
-    118314,
-    118618,
-    118720,
-    118766,
-    121917,
-    122178,
-    122392,
-    122399,
-    122400,
-    122401,
-    123082,
-    124468,
-    126474,
-    126633,
-    126718,
-    126720,
-    126722,
-    126941,
-    127791,
-    127792,
-    127793,
-    130170,
-    130406,
-    133494,
-    134310,
-    134340,
-    137184,
-    137526,
-    141642,
-    142305,
-    143944,
-    143946,
-    146553,
-    146593,
-    147694,
-    154347,
-    159253,
-    159275,
-    159386,
-    159387,
-    159516,
-    163293,
-    166788,
-    167048,
-    167062,
-    167115,
-    167607,
-    167680,
-    167742,
-    167962,
-    170989,
-    170990,
-    172672,
-    172912,
-    173734,
-    175349,
-    176816,
-    181330,
-    181331,
-    183006,
-    183123,
-    183678,
-    185407,
-    185808,
-    185817,
-    185823,
-    186370,
-    189793,
-    189869,
-    189893,
-    191078,
-    193275,
-    214520,
-    214756,
-    214889,
-    214960,
-    217178,
-    217231,
-    217348,
-    217359,
-    217459,
-    217632,
-    217679,
-    220098,
-    220101,
-    220104,
-    227072,
-    229656,
-    235745,
-    235836,
-    236163,
-    236655,
-    236789,
-    239711,
-    240131,
-    243309,
-    248631,
+
+	-- CATEGORY: Item Set>Arena>Maelstrom Arena
+	[71646] = true,			-- Winterborn | Last Checked: U47
+
+	-- CATEGORY: Item Set>Arena>Vateshran Hollows
+	[147694] = true,		-- Explosive Rebuke | Last Checked: U47
+
+	-- CATEGORY: Item Set>Craftable
+	[34502] = true,			-- Ashen Grip | Last Checked: U47
+	[163293] = true,		-- Deadlands Demolisher | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Bedlam Veil
+	[214756] = true,		-- Reflected Fury | Last Checked: U47
+	[214520] = true,		-- Tarnished Nightmare | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Bloodroot Forge
+	[97574] = true,			-- Flame Blossom | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Castle Thorn
+	[141642] = true,		-- Crimson Twilight | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Coral Aerie
+	[167115] = true,		-- Glacial Guardian | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Cradle of Shadows
+	[84355] = true,			-- Hand of Mephala | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Depths of Malatar
+	[116920] = true,		-- Auroran's Thunder | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Dread Cellar
+	[159275] = true,		-- Rush of Agony | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Exiled Redoubt
+	[235745] = true,		-- Jerensi's Bladestorm (Delayed) | Last Checked: U47
+	[236163] = true,		-- Jerensi's Bladestorm (Initial) | Last Checked: U47
+	[235836] = true,		-- Vandorallen's Resonance | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Falkreath Hold
+	[97716] = true,			-- Pillar of Nirn (Initial hit only) | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Oathsworn Pit
+	[214889] = true,		-- Cinders of Anthelmir | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Red Petal Bastion
+	[159253] = true,		-- Thunder Caller | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Shipwright's Regret
+	[167062] = true,		-- Turning Tide | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon>Unhallowed Grave
+	[133494] = true,		-- Aegis Caller | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Castle Thorn
+	[142305] = true,		-- Lady Thorn | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Coral Aerie
+	[167048] = true,		-- Kargaeda's Storm (Kargaeda) | Last Checked: U47
+	[167607] = true,		-- Kargaeda's Wind (Kargaeda) | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Earthen Root Enclave
+	[176816] = true,		-- Archdruid Devyric | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Fang Lair
+	[102094] = true,		-- Thurvokun | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Graven Deep
+	[175349] = true,		-- Euphotic Gatekeeper | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Lair of Maarselok
+	[126941] = true,		-- Maarselok | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Lep Seclusa
+	[236655] = true,		-- Orpheon the Tactician (Stunned) | Last Checked: U47
+	[236789] = true,		-- Orpheon the Tactician (Immune to Stun) | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Naj-Caldeesh
+	[248631] = true,		-- Bar-Sakka | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Red Petal Bastion
+	[159516] = true,		-- Prior Thierric | Last Checked: U47
+
+	-- CATEGORY: Item Set>DLC Dungeon (Monster)>Scalecaller Peak
+	[102136] = true,		-- Z'aans | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon>City of Ash I/II
+	[59696] = true,			-- Embershield | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon>Direfrost Keep
+	[34404] = true,			-- Frostfire (The Ice Furnace) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon>Tempest Island
+	[67136] = true,			-- Overwhelming Surge | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Arx Corinium
+	[80544] = true,			-- Sellistrix (Spawn of Mephala) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>City of Ash I
+	[83409] = true,			-- Infernal Guardian | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>City of Ash II
+	[61273] = true,			-- Valkyn Skoria (All other enemies in 5 meters) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Crypt of Hearts I
+	[80526] = true,			-- Ilambris | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Crypt of Hearts II
+	[59593] = true,			-- Nerieneth | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Direfrost Keep
+	[80561] = true,			-- Iceheart | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Fungal Grotto I
+	[80565] = true,			-- Kragh | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Tempest Island
+	[80521] = true,			-- Stormfist (Final Hit) | Last Checked: U47
+	[80522] = true,			-- Stormfist (First 3s) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Vault's of Madness
+	[84502] = true,			-- Grothdarr | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster)>Volenfell
+	[80865] = true,			-- Tremorscale | Last Checked: U47
+
+	-- CATEGORY: Item Set>Dungeon (Monster) >Fungal Grotto II
+	[59498] = true,			-- Mephala's Web | Last Checked: U47
+
+	-- CATEGORY: Item Set>Imperial City (Monster)
+	[167742] = true,		-- Baron Thirsk | Last Checked: U47
+	[166788] = true,		-- Lady Malygda (Dmg going out) | Last Checked: U47
+	[167962] = true,		-- Lady Malygda (Dmg  coming back) | Last Checked: U47
+	[167680] = true,		-- Nunatak | Last Checked: U47
+
+	-- CATEGORY: Item Set>Infinite Archive>Necromancer
+	[227072] = true,		-- Corpsebuster | Last Checked: U47
+
+	-- CATEGORY: Item Set>Mythic
+	[173734] = true,		-- Dov-Rha Sabatons | Last Checked: U47
+	[239711] = true,		-- Mad God's Dancing Shoes (Exploding Cheese Wheel) | Last Checked: U47
+	[240131] = true,		-- Mad God's Dancing Shoes (Enemies Facing You) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Overland
+	[75692] = true,			-- Bahraha's Curse | Last Checked: U47
+	[154347] = true,		-- Deadlands Assassin | Last Checked: U47
+	[93307] = true,			-- Defiler | Last Checked: U47
+	[243309] = true,		-- Mad Tinkerer | Last Checked: U47
+	[57209] = true,			-- Storm Knight's Plate | Last Checked: U47
+	[76344] = true,			-- Syvarra's Scales (Only the weak initial tick.) | Last Checked: U47
+	[33497] = true,			-- Thunderbugs Carapace | Last Checked: U47
+	[71658] = true,			-- Trinimac's Valor | Last Checked: U47
+	[137526] = true,		-- Venomous Smite (Only to nearby enemies.) | Last Checked: U47
+
+	-- CATEGORY: Item Set>PvP
+	[159386] = true,		-- Dark Convergence (Whole Circle) | Last Checked: U47
+	[159387] = true,		-- Dark Convergence (Inner Circle) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Trial>Aetherian Archive
+	[50992] = true,			-- Defending Warrior | Last Checked: U47
+
+	-- CATEGORY: Item Set>Trial>Dreadsail Reef
+	[172672] = true,		-- Whorl of the Depths (Whirlpool) | Last Checked: U47
+
+	-- CATEGORY: Item Set>Trial>Maw of Lorkhaj
+	[75752] = true,			-- Roar of Alkosh (Initial hit only) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Arcanist>Herald of the Tome
+	[185817] = true,		-- Abyssal Impact | Last Checked: U47
+	[183006] = true,		-- Cephaliarc's Flail | Last Checked: U47
+	[183123] = true,		-- Exhausting Fatecarver | Last Checked: U47
+	[185808] = true,		-- Fatecarver | Last Checked: U47
+	[185407] = true,		-- Fulminating Rune (6 second Detonation) | Last Checked: U47
+	[186370] = true,		-- Pragmatic Fatecarver | Last Checked: U47
+	[191078] = true,		-- Runebreak (The Imperfect Ring Synergy) | Last Checked: U47
+	[185823] = true,		-- Tentacular Dread | Last Checked: U47
+	[189869] = true,		-- The Languid Eye | Last Checked: U47
+	[189793] = true,		-- The Unblinking Eye | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Arcanist>Soldier of Apocrypha
+	[183678] = true,		-- Gibbering Shield (Difficult to test.) | Last Checked: U47
+	[193275] = true,		-- Sanctum of the Abyssal Sea (Difficult to test.) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Dragonknight>Ardent Flame
+	[28995] = true,			-- Dragonknight Standard | Last Checked: U47
+	[20930] = true,			-- Engulfing Flames (Initial Conal Hit) | Last Checked: U47
+	[20917] = true,			-- Fiery Breath (Initial Conal Hit) | Last Checked: U47
+	[20944] = true,			-- Noxious Breath (Initial Conal Hit) | Last Checked: U47
+	[32960] = true,			-- Shifting Standard | Last Checked: U47
+	[32948] = true,			-- Standard of Might | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Dragonknight>Draconic Power
+	[20252] = true,			-- Burning Talons (Initial Hit) | Last Checked: U47
+	[20251] = true,			-- Choking Talons | Last Checked: U47
+	[20245] = true,			-- Dark Talons | Last Checked: U47
+	[32792] = true,			-- Deep Breath (Initial Hit) | Last Checked: U47
+	[32794] = true,			-- Deep Breath (Delayed Hit) | Last Checked: U47
+	[29014] = true,			-- Dragon Leap | Last Checked: U47
+	[32785] = true,			-- Draw Essence (Initial Hit) | Last Checked: U47
+	[32787] = true,			-- Draw Essence (Delayed Hit) | Last Checked: U47
+	[32716] = true,			-- Ferocious Leap | Last Checked: U47
+	[31837] = true,			-- Inhale (Initial Hit) | Last Checked: U47
+	[31842] = true,			-- Inhale (Delayed Hit) | Last Checked: U47
+	[32720] = true,			-- Take Flight | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Dragonknight>Earthen Heart
+	[17979] = true,			-- Corrosive Armor (DMG to Nearby Enemies) | Last Checked: U47
+	[32711] = true,			-- Eruption (DOT) | Last Checked: U47
+	[32714] = true,			-- Eruption (Initial Hit) | Last Checked: U47
+	[15959] = true,			-- Magma Armor (DMG to Nearby Enemies) | Last Checked: U47
+	[17875] = true,			-- Magma Shell (DMG to Nearby Enemies) | Last Checked: U47
+	[134340] = true,		-- Stone Giant (Initial Hit) | Last Checked: U47
+	[134310] = true,		-- Stonefist (Initial Hit) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Necromancer>Bone Tyrant
+	[115115] = true,		-- Death Scythe | Last Checked: U47
+	[118314] = true,		-- Ghostly Embrace (First Circle On-Hit) | Last Checked: U47
+	[143944] = true,		-- Ghostly Embrace (Second Circle On-Hit) | Last Checked: U47
+	[143946] = true,		-- Ghostly Embrace (Third Circle On-hit) | Last Checked: U47
+	[118223] = true,		-- Hungry Scythe | Last Checked: U47
+	[118720] = true,		-- Pummeling Goliath | Last Checked: U47
+	[118618] = true,		-- Pure Agony (Agony Totem Synergy) | Last Checked: U47
+	[118289] = true,		-- Ravenous Goliath | Last Checked: U47
+	[118266] = true,		-- Ruinous Scythe | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Necromancer>Grave Lord
+	[117854] = true,		-- Avid Boneyard | Last Checked: U47
+	[117715] = true,		-- Blighted Skeletal Detonation | Last Checked: U47
+	[115254] = true,		-- Boneyard | Last Checked: U47
+	[124468] = true,		-- Deathbolt (Skeletal Arcanist AOE Dmg) | Last Checked: U47
+	[118766] = true,		-- Detonating Siphon (DOT) | Last Checked: U47
+	[123082] = true,		-- Detonating Siphon (Terminatiing Explosion) | Last Checked: U47
+	[122178] = true,		-- Frozen Colossus (Hits 1-3) | Last Checked: U47
+	[122392] = true,		-- Glacial Colossus (Hits 1-3) | Last Checked: U47
+	[220098] = true,		-- Grave Lord's Sacrifice ("Buffed 3rd skull hit base morph.") | Last Checked: U47
+	[220101] = true,		-- Grave Lord's Sacrifice (Buffed 3rd venom skull hit.) | Last Checked: U47
+	[220104] = true,		-- Grave Lord's Sacrifice (Buffed 3rd ricochet skull hit.) | Last Checked: U47
+	[115572] = true,		-- Grave Robber (Boneyard Synergy) | Last Checked: U47
+	[118011] = true,		-- Mystic Siphon | Last Checked: U47
+	[122399] = true,		-- Pestilent Colossus (Hit 1) | Last Checked: U47
+	[122400] = true,		-- Pestilent Colossus (Hit 2) | Last Checked: U47
+	[122401] = true,		-- Pestilent Colossus (Hit 3) | Last Checked: U47
+	[116410] = true,		-- Shocking Siphon | Last Checked: U47
+	[117809] = true,		-- Unnerving Boneyard | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Nightblade>Assassination
+	[25494] = true,			-- Lotus Fan (Initial Hit) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Nightblade>Shadow
+	[108936] = true,		-- Corrossive Drain (From Dark Shade Skill) | Last Checked: U47
+	[36052] = true,			-- Twisting Path | Last Checked: U47
+	[36490] = true,			-- Veil of Blades | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Nightblade>Siphoning
+	[33316] = true,			-- Drain Power | Last Checked: U47
+	[36901] = true,			-- Power Extraction | Last Checked: U47
+	[36891] = true,			-- Sap Essence | Last Checked: U47
+	[25091] = true,			-- Soul Shred (Initial Hit) | Last Checked: U47
+	[35460] = true,			-- Soul Tether (Initial Hit) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Sorcerer>Daedric Summoning
+	[24329] = true,			-- Daedric Prey | Last Checked: U47
+	[29809] = true,			-- Atronach Lightning Strike (Every 2s - Charged Atronach) | Last Checked: U47
+	[23667] = true,			-- Summon Charged Atronach (Initial Hit) | Last Checked: U47
+	[24327] = true,			-- Daedric Curse | Last Checked: U47
+	[23664] = true,			-- Greater Storm Atronach (Initial Hit) | Last Checked: U47
+	[24331] = true,			-- Haunting Curse (Same ID for both ticks.) | Last Checked: U47
+	[23659] = true,			-- Summon Storm Atronach (Initial Hit) | Last Checked: U47
+	[29529] = true,			-- Summon Unstable Clannfear (Tailswipe) | Last Checked: U47
+	[108844] = true,		-- Summon Unstable Familiar (Every 2s) | Last Checked: U47
+	[77186] = true,			-- Summon Volatile Familiar (Every 2s) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Sorcerer>Dark Magic
+	[28309] = true,			-- Shattering Spines | Last Checked: U47
+	[80435] = true,			-- Suppression Field | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Sorcerer>Storm Calling
+	[23214] = true,			-- Boundless Storm | Last Checked: U47
+	[44491] = true,			-- Endless Fury (Only to other enemies nearby) | Last Checked: U47
+	[114798] = true,		-- Energy Overload (Heavy Attacks) | Last Checked: U47
+	[23232] = true,			-- Hurricane | Last Checked: U47
+	[23208] = true,			-- Lightning Flood | Last Checked: U47
+	[23211] = true,			-- Lightning Form | Last Checked: U47
+	[23189] = true,			-- Lightning Splash | Last Checked: U47
+	[23202] = true,			-- Liquid Lightning | Last Checked: U47
+	[44483] = true,			-- Mage's Fury (Only to other enemies nearby) | Last Checked: U47
+	[19128] = true,			-- Mage's Wrath (20% Explosion) | Last Checked: U47
+	[24798] = true,			-- Overload (Heavy Attacks) | Last Checked: U47
+	[7102] = true,			-- Power Overload (Heavy Attacks) | Last Checked: U47
+	[23239] = true,			-- Streak | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Templar>Aedric Spear
+	[44432] = true,			-- Biting Jabs | Last Checked: U47
+	[22181] = true,			-- Blazing Shield (Max reflected damage increases.) | Last Checked: U47
+	[26871] = true,			-- Blazing Spear (Initial Hit) | Last Checked: U47
+	[26879] = true,			-- Blazing Spear (DOT) | Last Checked: U47
+	[22139] = true,			-- Crescent Sweep (Initial Hit) | Last Checked: U47
+	[62606] = true,			-- Crescent Sweep (Every 2s) | Last Checked: U47
+	[22144] = true,			-- Everlasting Sweep (Initial Hit) | Last Checked: U47
+	[62598] = true,			-- Everlasting Sweep (Every 2s) | Last Checked: U47
+	[22165] = true,			-- Explosive Charge | Last Checked: U47
+	[26859] = true,			-- Luminous Shards (Initial Hit) | Last Checked: U47
+	[95955] = true,			-- Luminous Shards (DOT) | Last Checked: U47
+	[44426] = true,			-- Puncturing Strikes | Last Checked: U47
+	[44436] = true,			-- Puncturing Sweep | Last Checked: U47
+	[22138] = true,			-- Radial Sweep (Initial Hit) | Last Checked: U47
+	[62550] = true,			-- Radial Sweep (Every 2s) | Last Checked: U47
+	[22182] = true,			-- Radiant Ward (Initial Hit) | Last Checked: U47
+	[26192] = true,			-- Spear Shards (Initial Hit) | Last Checked: U47
+	[95931] = true,			-- Spear Shards (DOT) | Last Checked: U47
+	[22178] = true,			-- Sun Shield (Initial Hit) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Templar>Dawn's Wrath
+	[31604] = true,			-- Gravity Crush (Solar Prison synergy) | Last Checked: U47
+	[21753] = true,			-- Nova (Caster DOT) | Last Checked: U47
+	[21732] = true,			-- Reflective Light (Only the initial hit.) | Last Checked: U47
+	[100218] = true,		-- Solar Barrage (Every 2s) | Last Checked: U47
+	[21759] = true,			-- Solar Distrubance (Caster DOT) | Last Checked: U47
+	[21756] = true,			-- Solar Prison (Caster DOT) | Last Checked: U47
+	[31540] = true,			-- Supernova (Nova synergy) | Last Checked: U47
+	[127791] = true,		-- Unstable Core (First Hit) | Last Checked: U47
+	[127792] = true,		-- Unstable Core (Second Hit) | Last Checked: U47
+	[127793] = true,		-- Unstable Core (Third Hit) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Templar>Restoring Light
+	[80172] = true,			-- Ritual of Retribution | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Warden>Animal Companions
+	[89128] = true,			-- Crushing Swipe (Feral Guardian attack) | Last Checked: U47
+	[89220] = true,			-- Crushing Swipe (Wild Guardian attack) | Last Checked: U47
+	[105907] = true,		-- Crushing Swipe (Eternal Guardian attack) | Last Checked: U47
+	[94424] = true,			-- Deep Fissure (1st hit) | Last Checked: U47
+	[181331] = true,		-- Deep Fissure (2nd hit) | Last Checked: U47
+	[130170] = true,		-- Growing Swarm (Every 2s to nearby enemies) | Last Checked: U47
+	[94411] = true,			-- Scorch (1st hit) | Last Checked: U47
+	[181330] = true,		-- Scorch (2nd hit) | Last Checked: U47
+	[94445] = true,			-- Subterranean Assault (1st & 2nd hit.) | Last Checked: U47
+
+	-- CATEGORY: Skill>Class>Warden>Winter's Embrace
+	[86156] = true,			-- Arctic Blast (Initial Hit) | Last Checked: U47
+	[130406] = true,		-- Arctic Blast (Every 2s to enemies hit.) | Last Checked: U47
+	[88791] = true,			-- Gripping Shards | Last Checked: U47
+	[88783] = true,			-- Impaing Shards | Last Checked: U47
+	[88860] = true,			-- Northern Storm | Last Checked: U47
+	[88863] = true,			-- Permafrost | Last Checked: U47
+	[86247] = true,			-- Sleet Storm | Last Checked: U47
+	[88802] = true,			-- Winter's Revenge | Last Checked: U47
+
+	-- CATEGORY: Skill>Guild>Fighters Guild
+	[35713] = true,			-- Dawnbreaker (Initial Hit) | Last Checked: U47
+	[40158] = true,			-- Dawnbreaker of Smiting (Initial Hit) | Last Checked: U47
+	[40161] = true,			-- Flawless Dawnbreaker (Initial Hit) | Last Checked: U47
+	[40300] = true,			-- Silver Shards (All 3 bolts are affected.) | Last Checked: U47
+
+	-- CATEGORY: Skill>Guild>Mages Guild
+	[63454] = true,			-- Ice Comet (DOT) | Last Checked: U47
+	[63457] = true,			-- Ice Comet  (Initial hit) | Last Checked: U47
+	[63429] = true,			-- Meteor (DOT) | Last Checked: U47
+	[172912] = true,		-- Meteor (Initial hit) | Last Checked: U47
+	[40469] = true,			-- Scalding Rune (Initial Hit Only) | Last Checked: U47
+	[63471] = true,			-- Shooting Star (DOT) | Last Checked: U47
+	[63474] = true,			-- Shooting Star (Initial hit) | Last Checked: U47
+	[40473] = true,			-- Volcanic Rune | Last Checked: U47
+
+	-- CATEGORY: Skill>Guild>Undaunted
+	[85432] = true,			-- Combustion (Damage from Orb Synergy.) | Last Checked: U47
+	[42029] = true,			-- Mystic Orb | Last Checked: U47
+	[39299] = true,			-- Necrotic Orb | Last Checked: U47
+	[126720] = true,		-- Shadow Silk (Initial hit) | Last Checked: U47
+	[80107] = true,			-- Shadow Sillk (After 10s) | Last Checked: U47
+	[80129] = true,			-- Tangling Webs (After 10s) | Last Checked: U47
+	[126722] = true,		-- Tangling Webs (Initial hit) | Last Checked: U47
+	[80083] = true,			-- Trapping Webs (After 10s) | Last Checked: U47
+	[126718] = true,		-- Trapping Webs (Initial Hit) | Last Checked: U47
+
+	-- CATEGORY: Skill>PvP>Assault
+	[40267] = true,			-- Anti-Cavalry Caltrops | Last Checked: U47
+	[38561] = true,			-- Caltrops | Last Checked: U47
+	[61493] = true,			-- Inevitable Detonation | Last Checked: U47
+	[61488] = true,			-- Magicka Detonation | Last Checked: U47
+	[61502] = true,			-- Proximity Detonation | Last Checked: U47
+	[40252] = true,			-- Razor Caltrops | Last Checked: U47
+
+	-- CATEGORY: Skill>Scribing
+	[217231] = true,		-- Elemental Explosion (Initial Hit) | Last Checked: U47
+	[217178] = true,		-- Smash (Initial Hit) | Last Checked: U47
+	[217459] = true,		-- Soul Burst (Initial Hit) | Last Checked: U47
+	[217632] = true,		-- Torch (Initial hit) | Last Checked: U47
+	[217679] = true,		-- Trample (Initial Hit) | Last Checked: U47
+	[217348] = true,		-- Traveling Knife (Multi-Target Script) | Last Checked: U47
+	[217359] = true,		-- Traveling Knife (Between You and Them) | Last Checked: U47
+	[229656] = true,		-- Ulfsild's Contingency (Initial Hit) | Last Checked: U47
+	[214960] = true,		-- Vault | Last Checked: U47
+
+	-- CATEGORY: Skill>Weapon>Bow
+	[38724] = true,			-- Acid Spray (Initial Hit Only) | Last Checked: U47
+	[38696] = true,			-- Arrow Barrage | Last Checked: U47
+	[38722] = true,			-- Arrow Spray | Last Checked: U47
+	[38723] = true,			-- Bombard | Last Checked: U47
+	[38690] = true,			-- Endless Hail | Last Checked: U47
+	[28877] = true,			-- Volley | Last Checked: U47
+
+	-- CATEGORY: Skill>Weapon>Destruction Staff
+	[83683] = true,			-- Eye of Flame | Last Checked: U47
+	[83685] = true,			-- Eye of Frost | Last Checked: U47
+	[83687] = true,			-- Eye of Lightning | Last Checked: U47
+	[85127] = true,			-- Fiery Rage | Last Checked: U47
+	[28794] = true,			-- Fire Impulse | Last Checked: U47
+	[39149] = true,			-- Fire Ring | Last Checked: U47
+	[83626] = true,			-- Fire Storm | Last Checked: U47
+	[170989] = true,		-- Flame Pulsar | Last Checked: U47
+	[28798] = true,			-- Frost Impulse | Last Checked: U47
+	[170990] = true,		-- Frost Pulsar | Last Checked: U47
+	[39151] = true,			-- Frost Ring | Last Checked: U47
+	[83629] = true,			-- Ice Storm | Last Checked: U47
+	[85129] = true,			-- Icy Rage | Last Checked: U47
+	[146553] = true,		-- Shock Impulse | Last Checked: U47
+	[39153] = true,			-- Shock Ring | Last Checked: U47
+	[146593] = true,		-- Storm Pulsar | Last Checked: U47
+	[83631] = true,			-- Thunder Storm | Last Checked: U47
+	[85131] = true,			-- Thunderous Rage | Last Checked: U47
+	[39054] = true,			-- Unstable Wall of Fire (DOT) | Last Checked: U47
+	[39056] = true,			-- Unstable Wall of Fire (Explosion) | Last Checked: U47
+	[39071] = true,			-- Unstable Wall of Frost (DOT) | Last Checked: U47
+	[39072] = true,			-- Unstable Wall of Frost (Explosion) | Last Checked: U47
+	[39079] = true,			-- Unstable Wall of Storms (DOT) | Last Checked: U47
+	[39080] = true,			-- Unstable Wall of Storms (Explosion) | Last Checked: U47
+	[62896] = true,			-- Wall of Fire | Last Checked: U47
+	[62931] = true,			-- Wall of Frost | Last Checked: U47
+	[62971] = true,			-- Wall of Storms | Last Checked: U47
+
+	-- CATEGORY: Skill>Weapon>Dual Wield
+	[62522] = true,			-- Blade Cloak | Last Checked: U47
+	[62547] = true,			-- Deadly Cloak | Last Checked: U47
+	[62529] = true,			-- Quick Cloak | Last Checked: U47
+	[38861] = true,			-- Steel Tornado | Last Checked: U47
+	[38891] = true,			-- Whirling Blades | Last Checked: U47
+	[28591] = true,			-- Whirlwind | Last Checked: U47
+
+	-- CATEGORY: Skill>Weapon>Two-Handed
+	[38754] = true,			-- Brawler | Last Checked: U47
+	[38745] = true,			-- Carve (Initial Hit Only) | Last Checked: U47
+	[20919] = true,			-- Cleave | Last Checked: U47
+	[38823] = true,			-- Reverse Slice | Last Checked: U47
+	[38792] = true,			-- Stampede (Initial Hit) | Last Checked: U47
+	[126474] = true,		-- Stampede (DOT) | Last Checked: U47
+
+	-- CATEGORY: Skill>World>Soul Magic
+	[40416] = true,			-- Shatter Soul (Ending explosion) | Last Checked: U47
+	[45584] = true,			-- Soul Shatter (Passive) | Last Checked: U47
+
+	-- CATEGORY: Skill>World>Vampire
+	[38968] = true,			-- Blood Mist (Every 2s) | Last Checked: U47
+	[38935] = true,			-- Swarming Scion (Bat AOE) | Last Checked: U47
+
+	-- CATEGORY: Skill>World>Werewolf
+	[137184] = true,		-- Brutal Carnage (Recast DMG) | Last Checked: U47
+	[58864] = true,			-- Claws of Anguish (Initial Hit) | Last Checked: U47
+	[58879] = true,			-- Claws of Life (Initial Hit) | Last Checked: U47
+
 }
-
-local function comparator(left, right, _)
-    return left-right
-end
-
-local function isAreaDMG(abilityID)
-    return zo_binarysearch(abilityID, areaIDs, comparator)
-end
 
 local function getRawDPS(damage, duration)
 	return damage/duration
@@ -661,7 +801,7 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 				damageType == DAMAGE_TYPE_COLD then
 					dmgTypes.preCombat.magicalDMG = dmgTypes.preCombat.magicalDMG + hitValue
 			end
-			if isAreaDMG(abilityID) then
+			if areaIDs[abilityID] then
 				dmgTypes.preCombat.areaDMG = dmgTypes.preCombat.areaDMG + hitValue
 			end
 
@@ -685,7 +825,7 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 					damageType == DAMAGE_TYPE_COLD then
 						dmgTypes_Boss.preCombat.magicalDMG = dmgTypes_Boss.preCombat.magicalDMG + hitValue
 				end
-				if isAreaDMG(abilityID) then
+				if areaIDs[abilityID] then
 					dmgTypes_Boss.preCombat.areaDMG = dmgTypes_Boss.preCombat.areaDMG + hitValue
 				end
 			end
@@ -749,7 +889,7 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 				damageType == DAMAGE_TYPE_COLD then
 					dmgTypes.magicalDMG = dmgTypes.magicalDMG + hitValue
 			end
-			if isAreaDMG(abilityID) then
+			if areaIDs[abilityID] then
 					dmgTypes.areaDMG = dmgTypes.areaDMG + hitValue
 			end
 
@@ -773,7 +913,7 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 					damageType == DAMAGE_TYPE_COLD then
 						dmgTypes_Boss.magicalDMG = dmgTypes_Boss.magicalDMG + hitValue
 				end
-				if isAreaDMG(abilityID) then
+				if areaIDs[abilityID] then
 					dmgTypes_Boss.areaDMG = dmgTypes_Boss.areaDMG + hitValue
 				end
 			end
