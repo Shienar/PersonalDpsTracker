@@ -41,6 +41,11 @@
 					text="Area: 0%">
 					<Anchor point="TOPLEFT" relativeTo="$(parent)Magical" relativePoint="BOTTOMLEFT" />
 				</Label>
+				<Label name="$(parent)Single" width="200" height="25" font="ZoFontGamepad18" color="FFFFFF" wrapMode="TRUNCATE" 
+					verticalAlignment="CENTER" horizontalAlignment="CENTER"
+					text="ST: 0%">
+					<Anchor point="TOPLEFT" relativeTo="$(parent)Area" relativePoint="BOTTOMLEFT" />
+				</Label>
 			</Controls>
 		</TopLevelControl>
 	</Controls>

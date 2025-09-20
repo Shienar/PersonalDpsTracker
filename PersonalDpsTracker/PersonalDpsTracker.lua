@@ -19,12 +19,14 @@ local dmgTypes = {
 		martialDMG = 0,
 		magicalDMG = 0,
 		areaDMG = 0,
+		singleDMG = 0,
 	},
 	directDMG = 0,
 	dotDMG = 0,
 	martialDMG = 0,
 	magicalDMG = 0,
 	areaDMG = 0,
+	singleDMG = 0,
 }
 local dmgTypes_Boss = {
 	preCombat = {
@@ -33,12 +35,14 @@ local dmgTypes_Boss = {
 		martialDMG = 0,
 		magicalDMG = 0,
 		areaDMG = 0,
+		singleDMG = 0,
 	},
 	directDMG = 0,
 	dotDMG = 0,
 	martialDMG = 0,
 	magicalDMG = 0,
 	areaDMG = 0,
+	singleDMG = 0,
 }
 
 --See https://github.com/Shienar/AreaDamage for more documentation.
@@ -594,18 +598,21 @@ function PDT.updateBannerText()
 		DMGTypeBreakdownMartial:SetText("Martial: "..math.floor((dmgTypes.martialDMG/TotalDamage)*100).."%")
 		DMGTypeBreakdownMagical:SetText("Magic: "..math.floor((dmgTypes.magicalDMG/TotalDamage)*100).."%")
 		DMGTypeBreakdownArea:SetText("Area: "..math.floor((dmgTypes.areaDMG/TotalDamage)*100).."%")
+		DMGTypeBreakdownSingle:SetText("ST: "..math.floor((dmgTypes.singleDMG/TotalDamage)*100).."%")
 	elseif #bossNames ~= 0 and TotalDamage_Boss ~= 0 then
 		DMGTypeBreakdownDirect:SetText("Direct: "..math.floor((dmgTypes_Boss.directDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.directDMG/TotalDamage)*100).."%)")
 		DMGTypeBreakdownDOT:SetText("DOT: "..math.floor((dmgTypes_Boss.dotDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.dotDMG/TotalDamage)*100).."%)")
 		DMGTypeBreakdownMartial:SetText("Martial: "..math.floor((dmgTypes_Boss.martialDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.martialDMG/TotalDamage)*100).."%)")
 		DMGTypeBreakdownMagical:SetText("Magic: "..math.floor((dmgTypes_Boss.magicalDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.magicalDMG/TotalDamage)*100).."%)")
 		DMGTypeBreakdownArea:SetText("Area: "..math.floor((dmgTypes_Boss.areaDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.areaDMG/TotalDamage)*100).."%)")
+		DMGTypeBreakdownSingle:SetText("ST: "..math.floor((dmgTypes_Boss.singleDMG/TotalDamage_Boss)*100).."%".." ("..math.floor((dmgTypes.singleDMG/TotalDamage)*100).."%)")
 	else
 		DMGTypeBreakdownDirect:SetText("Direct: 0%")
 		DMGTypeBreakdownDOT:SetText("DOT: 0%")
 		DMGTypeBreakdownMartial:SetText("Martial: 0%")
 		DMGTypeBreakdownMagical:SetText("Magic: 0%")
 		DMGTypeBreakdownArea:SetText("Area: 0%")
+		DMGTypeBreakdownSingle:SetText("ST: 0%")
 	end
 end
 
@@ -658,12 +665,14 @@ local function ChangePlayerCombatState(event, inCombat)
 							martialDMG = 0,
 							magicalDMG = 0,
 							areaDMG = 0,
+							singleDMG = 0,
 						},
 						directDMG = 0,
 						dotDMG = 0,
 						martialDMG = 0,
 						magicalDMG = 0,
 						areaDMG = 0,
+						singleDMG = 0,
 					}
 					dmgTypes_Boss = {
 						preCombat = {
@@ -672,12 +681,14 @@ local function ChangePlayerCombatState(event, inCombat)
 							martialDMG = 0,
 							magicalDMG = 0,
 							areaDMG = 0,
+							singleDMG = 0,
 						},
 						directDMG = 0,
 						dotDMG = 0,
 						martialDMG = 0,
 						magicalDMG = 0,
 						areaDMG = 0,
+						singleDMG = 0,
 					}
 				else
 					--player is dead but boss isn't
@@ -697,12 +708,14 @@ local function ChangePlayerCombatState(event, inCombat)
 						martialDMG = 0,
 						magicalDMG = 0,
 						areaDMG = 0,
+						singleDMG = 0,
 					},
 					directDMG = 0,
 					dotDMG = 0,
 					martialDMG = 0,
 					magicalDMG = 0,
 					areaDMG = 0,
+					singleDMG = 0,
 				}
 				dmgTypes_Boss = {
 					preCombat = {
@@ -711,12 +724,14 @@ local function ChangePlayerCombatState(event, inCombat)
 						martialDMG = 0,
 						magicalDMG = 0,
 						areaDMG = 0,
+						singleDMG = 0,
 					},
 					directDMG = 0,
 					dotDMG = 0,
 					martialDMG = 0,
 					magicalDMG = 0,
 					areaDMG = 0,
+					singleDMG = 0,
 				}
 			end
 		end, 500)
@@ -744,12 +759,14 @@ local function onRevive(code)
 					martialDMG = 0,
 					magicalDMG = 0,
 					areaDMG = 0,
+					singleDMG = 0,
 				},
 				directDMG = 0,
 				dotDMG = 0,
 				martialDMG = 0,
 				magicalDMG = 0,
 				areaDMG = 0,
+				singleDMG = 0,
 			}
 			dmgTypes_Boss = {
 				preCombat = {
@@ -758,12 +775,14 @@ local function onRevive(code)
 					martialDMG = 0,
 					magicalDMG = 0,
 					areaDMG = 0,
+					singleDMG = 0,
 				},
 				directDMG = 0,
 				dotDMG = 0,
 				martialDMG = 0,
 				magicalDMG = 0,
 				areaDMG = 0,
+				singleDMG = 0,
 			}
 		end, 2500)
 	end
@@ -806,6 +825,8 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 			end
 			if areaIDs[abilityID] then
 				dmgTypes.preCombat.areaDMG = dmgTypes.preCombat.areaDMG + hitValue
+			else
+				dmgTypes.preCombat.singleDMG = dmgTypes.preCombat.singleDMG + hitValue;
 			end
 
 			if PDT.containsVal(bossNames, targetName) then
@@ -830,6 +851,8 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 				end
 				if areaIDs[abilityID] then
 					dmgTypes_Boss.preCombat.areaDMG = dmgTypes_Boss.preCombat.areaDMG + hitValue
+				else
+					dmgTypes_Boss.preCombat.singleDMG = dmgTypes_Boss.preCombat.singleDMG + hitValue
 				end
 			end
 
@@ -843,12 +866,14 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 
 				--Banner precombat damage
 				dmgTypes.areaDMG = dmgTypes.areaDMG + dmgTypes.preCombat.areaDMG
+				dmgTypes.singleDMG = dmgTypes.singleDMG + dmgTypes.preCombat.singleDMG
 				dmgTypes.directDMG = dmgTypes.directDMG + dmgTypes.preCombat.directDMG
 				dmgTypes.dotDMG = dmgTypes.dotDMG + dmgTypes.preCombat.dotDMG
 				dmgTypes.magicalDMG = dmgTypes.magicalDMG + dmgTypes.preCombat.magicalDMG
 				dmgTypes.martialDMG = dmgTypes.martialDMG + dmgTypes.preCombat.martialDMG
 				
 				dmgTypes_Boss.areaDMG = dmgTypes_Boss.areaDMG + dmgTypes_Boss.preCombat.areaDMG
+				dmgTypes_Boss.singleDMG = dmgTypes_Boss.singleDMG + dmgTypes_Boss.preCombat.singleDMG
 				dmgTypes_Boss.directDMG = dmgTypes_Boss.directDMG + dmgTypes_Boss.preCombat.directDMG
 				dmgTypes_Boss.dotDMG = dmgTypes_Boss.dotDMG + dmgTypes_Boss.preCombat.dotDMG
 				dmgTypes_Boss.magicalDMG = dmgTypes_Boss.magicalDMG + dmgTypes_Boss.preCombat.magicalDMG
@@ -860,6 +885,7 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 					martialDMG = 0,
 					magicalDMG = 0,
 					areaDMG = 0,
+					singleDMG = 0,
 				}
 
 				dmgTypes_Boss.preCombat = {
@@ -868,6 +894,7 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 					martialDMG = 0,
 					magicalDMG = 0,
 					areaDMG = 0,
+					singleDMG = 0,
 				}
 			end
 			
@@ -893,7 +920,9 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 					dmgTypes.magicalDMG = dmgTypes.magicalDMG + hitValue
 			end
 			if areaIDs[abilityID] then
-					dmgTypes.areaDMG = dmgTypes.areaDMG + hitValue
+				dmgTypes.areaDMG = dmgTypes.areaDMG + hitValue
+			else
+				dmgTypes.singleDMG = dmgTypes.singleDMG + hitValue	
 			end
 
 			if PDT.containsVal(bossNames, targetName) then 
@@ -918,6 +947,8 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 				end
 				if areaIDs[abilityID] then
 					dmgTypes_Boss.areaDMG = dmgTypes_Boss.areaDMG + hitValue
+				else
+					dmgTypes_Boss.singleDMG = dmgTypes_Boss.singleDMG + hitValue
 				end
 			end
 			
