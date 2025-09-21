@@ -401,6 +401,7 @@ local areaIDs = {
 	[40300] = true,			-- Silver Shards (All 3 bolts are affected.) | Last Checked: U47
 
 	-- CATEGORY: Skill>Guild>Mages Guild
+	[31635] = true,			-- Fire Rune | Last Checked: U47
 	[63454] = true,			-- Ice Comet (DOT) | Last Checked: U47
 	[63457] = true,			-- Ice Comet  (Initial hit) | Last Checked: U47
 	[63429] = true,			-- Meteor (DOT) | Last Checked: U47
@@ -414,6 +415,7 @@ local areaIDs = {
 	[85432] = true,			-- Combustion (Damage from Orb Synergy.) | Last Checked: U47
 	[42029] = true,			-- Mystic Orb | Last Checked: U47
 	[39299] = true,			-- Necrotic Orb | Last Checked: U47
+	[41839] = true,			-- Radiate (AOE part of Inner fire synergy.) | Last Checked: U47
 	[126720] = true,		-- Shadow Silk (Initial hit) | Last Checked: U47
 	[80107] = true,			-- Shadow Sillk (After 10s) | Last Checked: U47
 	[80129] = true,			-- Tangling Webs (After 10s) | Last Checked: U47
@@ -538,6 +540,8 @@ local areaIDs = {
 	[137184] = true,		-- Brutal Carnage (Recast DMG) | Last Checked: U47
 	[58864] = true,			-- Claws of Anguish (Initial Hit) | Last Checked: U47
 	[58879] = true,			-- Claws of Life (Initial Hit) | Last Checked: U47
+	[58855] = true,			-- Infectious Claw (Initial Hit) | Last Checked: U47
+
 }
 
 local function getRawDPS(damage, duration)
