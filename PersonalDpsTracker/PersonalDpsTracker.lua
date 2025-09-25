@@ -47,7 +47,6 @@ local dmgTypes_Boss = {
 
 --See https://github.com/Shienar/AreaDamage for more documentation.
 local areaIDs = {
-
 	-- CATEGORY: Item Set>Arena>Maelstrom Arena
 	[71646] = true,			-- Winterborn | Last Checked: U47
 
@@ -234,6 +233,7 @@ local areaIDs = {
 	[20930] = true,			-- Engulfing Flames (Initial Conal Hit) | Last Checked: U47
 	[20917] = true,			-- Fiery Breath (Initial Conal Hit) | Last Checked: U47
 	[20944] = true,			-- Noxious Breath (Initial Conal Hit) | Last Checked: U47
+	[98438] = true,			-- Shackle (Synergy DMG) | Last Checked: U47
 	[32960] = true,			-- Shifting Standard | Last Checked: U47
 	[32948] = true,			-- Standard of Might | Last Checked: U47
 
@@ -324,6 +324,7 @@ local areaIDs = {
 
 	-- CATEGORY: Skill>Class>Sorcerer>Storm Calling
 	[23214] = true,			-- Boundless Storm | Last Checked: U47
+	[23196] = true,			-- Conduit (Synergy DMG) | Last Checked: U47
 	[44491] = true,			-- Endless Fury (Only to other enemies nearby) | Last Checked: U47
 	[114798] = true,		-- Energy Overload (Heavy Attacks) | Last Checked: U47
 	[23232] = true,			-- Hurricane | Last Checked: U47
@@ -438,9 +439,8 @@ local areaIDs = {
 	[217179] = true,		-- Smash (Magic Focus - Initial Hit) | Last Checked: U47
 	[219972] = true,		-- Smash (Knockback/Stun Focus - Initial Hit) | Last Checked: U47
 	[227609] = true,		-- Smash (Taunt Focus -Initial Hit) | Last Checked: U47
-	[215779] = true,		-- Soul Burst (Disease Focus - Initial Hit) | Last Checked: U47
 	[217459] = true,		-- Soul Burst (Magic/Fire/Frost/Shock Focus - Initial Hit) | Last Checked: U47
-	[217465] = true,		-- Soul Burst (Physical/Bleed Focus - Initial Hit) | Last Checked: U47
+	[217465] = true,		-- Soul Burst (Physical/Bleed/Disease Focus - Initial Hit) | Last Checked: U47
 	[217631] = true,		-- Torch (Physical/Bleed Focus - Initial hit) | Last Checked: U47
 	[217632] = true,		-- Torch (Fire/Frost Focus - Initial hit) | Last Checked: U47
 	[217679] = true,		-- Trample (Physical/Disease Focus - Initial Hit) | Last Checked: U47
@@ -465,6 +465,7 @@ local areaIDs = {
 	[220509] = true,		-- Sorcerer's Class Mastery (Wield Soul) | Last Checked: U47
 	[220620] = true,		-- Sorcerer's Class Mastery (Soul Burst) | Last Checked: U47
 	[220831] = true,		-- Sorcerer's Class Mastery (Shield Throw) | Last Checked: U47
+	[221132] = true,		-- Sorcerer's Class Mastery (Mender's Bond) | Last Checked: U47
 	[221166] = true,		-- Sorcerer's Class Mastery (Ulfsild's Contingency) | Last Checked: U47
 	[221289] = true,		-- Sorcerer's Class Mastery (Elemental Explosion) | Last Checked: U47
 	[221374] = true,		-- Sorcerer's Class Mastery (Trample) | Last Checked: U47
@@ -541,7 +542,6 @@ local areaIDs = {
 	[58864] = true,			-- Claws of Anguish (Initial Hit) | Last Checked: U47
 	[58879] = true,			-- Claws of Life (Initial Hit) | Last Checked: U47
 	[58855] = true,			-- Infectious Claw (Initial Hit) | Last Checked: U47
-
 }
 
 local function getRawDPS(damage, duration)
@@ -1050,7 +1050,7 @@ function PDT.Initialize()
 	local generalSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "General",}
 	local textSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Text",}
 	local positionSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Position",}
-	local bannerSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "(BETA) Damage Types",}
+	local bannerSection = {type = LibHarvensAddonSettings.ST_SECTION,label = "Damage Types",}
 	
 	local changeCounter = 0
 	local changeCounter_Banner = 0
@@ -1476,7 +1476,7 @@ function PDT.Initialize()
 	local toggle_dmgTypes = {
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Hide Damage Type Breakdown?",
-        tooltip = "Disables the damagetype breakdown for banner focus scripts when set to \"On\"\n\n"..
+        tooltip = "Disables the damagetype breakdown when set to \"On\"\n\n"..
 			"Note: When two percentages are visible, the leftmost one is for boss damage and the rightmost one is for overall damage.",
         default = PDT.defaults.banner_hidden,
         setFunction = function(state) 
