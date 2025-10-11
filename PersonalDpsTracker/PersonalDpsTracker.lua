@@ -822,7 +822,7 @@ local function onRevive(code)
 end
 
 local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, abilityActionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, _log, sourceUnitID, targetUnitID, abilityID, overflow)
-	if (sourceType == 1 or sourceType == 2)  and (targetType == 0 or targetType == 4) and 
+	if (sourceType == 1 or sourceType == 2)  and (targetType == 0) and 
 		( result == ACTION_RESULT_DOT_TICK or
 		  result == ACTION_RESULT_DOT_TICK_CRITICAL  or
 		  result == ACTION_RESULT_CRITICAL_DAMAGE or
