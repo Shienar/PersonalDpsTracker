@@ -7,4 +7,6 @@
 ## SavedVariables: PDTSavedVariables
 
 PersonalDpsTracker.xml
-PersonalDpsTracker.lua
+settings.lua
+area.lua
+main.lua
