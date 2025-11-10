@@ -60,9 +60,6 @@ function PDT.setupSettings()
 			PDT.savedVariables.colorB = PDT.defaults.colorB
 			PDT.savedVariables.colorA = PDT.defaults.colorA
 
-			PDT.savedVariables.selectedText_font = PDT.defaults.selectedText_font
-			PDT.savedVariables.selectedFont = PDT.defaults.selectedFont
-
 			PDT.savedVariables.isHidden = PDT.defaults.isHidden
 			PDT.savedVariables.offset_x = PDT.defaults.offset_x
 			PDT.savedVariables.offset_y = PDT.defaults.offset_y
