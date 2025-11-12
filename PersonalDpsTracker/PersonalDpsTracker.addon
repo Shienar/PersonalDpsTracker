@@ -1,7 +1,8 @@
 ## Title: PersonalDpsTracker
 ## Author: Shienar
-## APIVersion: 101047
-## Version: 1.0.0
+## APIVersion: 101047 101048
+## AddOnVersion: 20001
+## Version: 2.0.1
 ## IsLibrary: False
 ## ConsoleDependsOn: LibHarvensAddonSettings>=20004
 ## SavedVariables: PDTSavedVariables
