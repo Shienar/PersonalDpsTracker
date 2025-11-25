@@ -210,17 +210,17 @@ end
 
 local function onRevive(code)
 	--Timeline:
-		--player died during boss
-		--player respawned
-		--player isn't in combat 2.5s later.
-		--Assume boss is dead and reset variables.
-	if deadOnBoss then
-		zo_callLater(function ()
+	--player died during boss
+	--player respawned
+	--player isn't in combat 2.5s later.
+	--Assume boss is dead and reset variables.
+
+	zo_callLater(function()
+		if deadOnBoss then
 			deadOnBoss = false
 			PDT.resetDamage()
-
-		end, 2500)
-	end
+		end
+	end, 2500)
 end
 
 local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, abilityActionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, _log, sourceUnitID, targetUnitID, abilityID, overflow)
