@@ -6,6 +6,7 @@ local endTime = 0 --milliseconds
 local fightTime = function () return (endTime-startTime)/1000 end --seconds
 local bossNames = { }
 local deadOnBoss = false
+local bossIsHealing = false
 local damage = {
 	bossAndTrash = {
 		total = 0,
@@ -28,15 +29,22 @@ local damage = {
 			areaDMG = 0,
 			singleDMG = 0,
 		},
+		totalHealth = 0,
+		totalMaxHealth = 0,
 	},
 }
+
+local function damageDealtFromEveryone()
+	return damage.boss.totalMaxHealth - damage.boss.totalHealth
+end
 
 function PDT.resetDamage()
 	--Reset other variables as well.
 	startTime = 0
 	endTime = 0
-	bossNames = { }
-	
+	bossNames = {}
+	bossIsHealing = false
+
 	damage = {
 		bossAndTrash = {
 			total = 0,
@@ -59,6 +67,8 @@ function PDT.resetDamage()
 				areaDMG = 0,
 				singleDMG = 0,
 			},
+			totalHealth = 0,
+			totalMaxHealth = 0,
 		},
 	}
 end
@@ -87,13 +97,39 @@ function PDT.updateText()
 		formattedString = PDT.savedVariables.displayText_Boss
 	end
 
-	if damage.boss.total ~= 0 then 
-		formattedString = string.gsub(formattedString, "<b>", tostring(formatNumber(getRawDPS(damage.boss.total, fightTime()))))
+    if damage.boss.total ~= 0 then
+		-- damage to boss
+		formattedString = string.gsub(formattedString, "<b>",
+			tostring(formatNumber(getRawDPS(damage.boss.total, fightTime()))))
+		formattedString = string.gsub(formattedString, "<B>",
+            tostring(formatNumber(damage.boss.total)))
+
+		-- share of personal damage to boss relative to total damage dealt
+		local asteriskIfHealing = ""
+        if bossIsHealing then
+            asteriskIfHealing = "%*"
+        end
+
+		local totalDamageDealt = damageDealtFromEveryone()
+		local sharePercent = 0
+		if totalDamageDealt > 0 then
+			sharePercent = (damage.boss.total / totalDamageDealt) * 100
+		end
+		formattedString = string.gsub(formattedString, "<s>",
+            tostring(string.format("%.1f", sharePercent)) .. "%%" .. asteriskIfHealing)
+
+		if sharePercent > 110 then
+			formattedString = string.gsub(formattedString, "<S>", "N/A" .. asteriskIfHealing)
+		else
+			formattedString = string.gsub(formattedString, "<S>",
+				tostring("1/" .. string.format("%.1f", totalDamageDealt / damage.boss.total)) .. asteriskIfHealing)
+		end
 	else
 		formattedString = string.gsub(formattedString, "<b>", "0")
 		formattedString = string.gsub(formattedString, "<B>", "0")
+		formattedString = string.gsub(formattedString, "<s>", "0")
+		formattedString = string.gsub(formattedString, "<S>", "0")
 	end
-	formattedString = string.gsub(formattedString, "<B>", tostring(formatNumber(damage.boss.total)))
 
 	if damage.bossAndTrash.total ~= 0 then
 		formattedString = string.gsub(formattedString, "<d>", tostring(formatNumber(getRawDPS(damage.bossAndTrash.total, fightTime()))))
@@ -152,19 +188,9 @@ local function ChangePlayerCombatState(event, inCombat)
 		 --Z'maja doesn't trigger the event, so I'm checking for bosses at the start of combat.
 		PDT.onNewBosses(_, _)
 	else
-		zo_callLater(function ()
-			local totalBossHP, totalMaxBossHP = 0, 0
-			for i = 1, 12 do
-				local bossTag = "boss"..i
-				if DoesUnitExist(bossTag) then
-					local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
-					totalBossHP = totalBossHP + bossHP
-					totalMaxBossHP = totalMaxBossHP + maxBossHP
-				end
-			end
-			
-			if totalMaxBossHP > 0 then
-				local ratio = totalBossHP/totalMaxBossHP
+		zo_callLater(function()
+			if damage.boss.totalMaxHealth > 0 then
+				local ratio = damage.boss.totalHealth / damage.boss.totalMaxHealth
 				if ratio <= 0 or ratio >= 1 then
 					--Boss is dead or reset (group wipe)
 					--Reset variables
@@ -180,7 +206,6 @@ local function ChangePlayerCombatState(event, inCombat)
 			end
 		end, 500)
 	end
-	
 end
 
 local function onRevive(code)
@@ -265,6 +290,24 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 				damage.boss.dmgTypes.areaDMG = damage.boss.dmgTypes.areaDMG + hitValue
 			else
 				damage.boss.dmgTypes.singleDMG = damage.boss.dmgTypes.singleDMG + hitValue
+			end
+
+
+			local totalBossHP, totalMaxBossHP = 0, 0
+			for i = 1, 12 do
+				local bossTag = "boss" .. i
+				if DoesUnitExist(bossTag) then
+					local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
+					totalBossHP = totalBossHP + bossHP
+					totalMaxBossHP = totalMaxBossHP + maxBossHP
+				end
+			end
+			local damageDealtBefore = damageDealtFromEveryone()
+			damage.boss.totalHealth = totalBossHP
+			damage.boss.totalMaxHealth = totalMaxBossHP
+			local damageDealtAfter = damageDealtFromEveryone()
+			if damageDealtBefore > damageDealtAfter or result == ACTION_RESULT_DAMAGE_SHIELDED then
+				bossIsHealing = true
 			end
 		end
 		
