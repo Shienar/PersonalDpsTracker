@@ -134,7 +134,10 @@ function PDT.setupSettings()
 					"<D> will be replaced with your overall damage\n"..
 					"<b> will be replaced with your boss DPS\n"..
 					"<B> will be replaced with your overall damage to bosses\n"..
-					"<t> will be replaced with the fight time\n",
+					"<s> will be replaced with your share of damage to the boss (in %, e.g. 25.3%)\n" ..
+					"<S> will be replaced with your share of damage to the boss (as a fraction, e.g. 1/4.3)\n" ..
+					"<t> will be replaced with the fight time\n" ..
+					"\nNB: if boss heals or shields, your share (<s> or <S>) can't be determined reliably. * symbol will be shown next to the value to signal that\n",
         default = PDT.defaults.displayText_Boss,
         setFunction = function(value)
             PDT.savedVariables.displayText_Boss = value
