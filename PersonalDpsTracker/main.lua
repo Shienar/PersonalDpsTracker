@@ -179,6 +179,25 @@ function PDT.onNewBosses(code, forceReset)
 	end
 end
 
+local function RefreshBossHealth()
+	local totalBossHP, totalMaxBossHP = 0, 0
+	for i = 1, 12 do
+		local bossTag = "boss" .. i
+		if DoesUnitExist(bossTag) then
+			local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
+			totalBossHP = totalBossHP + bossHP
+			totalMaxBossHP = totalMaxBossHP + maxBossHP
+		end
+	end
+	local damageDealtBefore = damageDealtFromEveryone()
+	damage.boss.totalHealth = totalBossHP
+	damage.boss.totalMaxHealth = totalMaxBossHP
+	local damageDealtAfter = damageDealtFromEveryone()
+	if damageDealtBefore > damageDealtAfter then
+		bossIsHealing = true
+	end
+end
+
 local function ChangePlayerCombatState(event, inCombat)
 
 	if inCombat then 
@@ -189,6 +208,7 @@ local function ChangePlayerCombatState(event, inCombat)
 		PDT.onNewBosses(_, _)
 	else
 		zo_callLater(function()
+			RefreshBossHealth()
 			if damage.boss.totalMaxHealth > 0 then
 				local ratio = damage.boss.totalHealth / damage.boss.totalMaxHealth
 				if ratio <= 0 or ratio >= 1 then
@@ -291,24 +311,12 @@ local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGra
 			else
 				damage.boss.dmgTypes.singleDMG = damage.boss.dmgTypes.singleDMG + hitValue
 			end
-
-
-			local totalBossHP, totalMaxBossHP = 0, 0
-			for i = 1, 12 do
-				local bossTag = "boss" .. i
-				if DoesUnitExist(bossTag) then
-					local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
-					totalBossHP = totalBossHP + bossHP
-					totalMaxBossHP = totalMaxBossHP + maxBossHP
-				end
-			end
-			local damageDealtBefore = damageDealtFromEveryone()
-			damage.boss.totalHealth = totalBossHP
-			damage.boss.totalMaxHealth = totalMaxBossHP
-			local damageDealtAfter = damageDealtFromEveryone()
-			if damageDealtBefore > damageDealtAfter or result == ACTION_RESULT_DAMAGE_SHIELDED then
+			if result == ACTION_RESULT_DAMAGE_SHIELDED then
 				bossIsHealing = true
 			end
+
+
+			RefreshBossHealth()
 		end
 		
 		endTime = GetGameTimeMilliseconds()
