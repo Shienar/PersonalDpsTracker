@@ -185,12 +185,22 @@ local function ChangePlayerCombatState(event, inCombat)
 		deadOnBoss = false
 		if startTime == 0 then startTime = GetGameTimeMilliseconds() end
 		
-		 --Z'maja doesn't trigger the event, so I'm checking for bosses at the start of combat.
+		--Z'maja doesn't trigger the event, so I'm checking for bosses at the start of combat.
 		PDT.onNewBosses(_, _)
 	else
 		zo_callLater(function()
-			if damage.boss.totalMaxHealth > 0 then
-				local ratio = damage.boss.totalHealth / damage.boss.totalMaxHealth
+			local totalBossHP, totalMaxBossHP = 0, 0
+			for i = 1, 12 do
+				local bossTag = "boss"..i
+				if DoesUnitExist(bossTag) then
+					local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
+					totalBossHP = totalBossHP + bossHP
+					totalMaxBossHP = totalMaxBossHP + maxBossHP
+				end
+			end
+			
+			if totalMaxBossHP > 0 then
+				local ratio = totalBossHP/totalMaxBossHP
 				if ratio <= 0 or ratio >= 1 then
 					--Boss is dead or reset (group wipe)
 					--Reset variables
