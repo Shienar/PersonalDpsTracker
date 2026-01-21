@@ -5,7 +5,6 @@ local startTime = 0 --milliseconds
 local endTime = 0 --milliseconds
 local fightTime = function () return (endTime-startTime)/1000 end --seconds
 local bossNames = { }
-local deadOnBoss = false
 local bossIsHealing = false
 local damage = {
 	bossAndTrash = {
@@ -181,14 +180,14 @@ end
 
 local function ChangePlayerCombatState(event, inCombat)
 
-	if inCombat then 
-		deadOnBoss = false
+	if inCombat then
 		if startTime == 0 then startTime = GetGameTimeMilliseconds() end
 		
-		--Z'maja doesn't trigger the event, so I'm checking for bosses at the start of combat.
+		--Ensure that all bosses are being appropriately tracked.
 		PDT.onNewBosses(_, _)
 	else
 		zo_callLater(function()
+
 			local totalBossHP, totalMaxBossHP = 0, 0
 			for i = 1, 12 do
 				local bossTag = "boss"..i
@@ -198,39 +197,48 @@ local function ChangePlayerCombatState(event, inCombat)
 					totalMaxBossHP = totalMaxBossHP + maxBossHP
 				end
 			end
-			
+
 			if totalMaxBossHP > 0 then
 				local ratio = totalBossHP/totalMaxBossHP
 				if ratio <= 0 or ratio >= 1 then
 					--Boss is dead or reset (group wipe)
 					--Reset variables
 					PDT.resetDamage()
-				else
-					--player is dead but boss isn't
-					deadOnBoss = true
 				end
+				--Else: player is dead but boss isn't
 			else
 				--Not a boss fight.
 				--Reset variables
 				PDT.resetDamage()
 			end
-		end, 500)
+		end, 1000)
 	end
 end
 
 local function onRevive(code)
-	--Timeline:
-	--player died during boss
-	--player respawned
-	--player isn't in combat 2.5s later.
-	--Assume boss is dead and reset variables.
+	local totalBossHP, totalMaxBossHP = 0, 0
+	for i = 1, 12 do
+		local bossTag = "boss"..i
+		if DoesUnitExist(bossTag) then
+			local bossHP, maxBossHP, _ = GetUnitPower(bossTag, COMBAT_MECHANIC_FLAGS_HEALTH)
+			totalBossHP = totalBossHP + bossHP
+			totalMaxBossHP = totalMaxBossHP + maxBossHP
+		end
+	end
 
-	zo_callLater(function()
-		if deadOnBoss then
-			deadOnBoss = false
+	if totalMaxBossHP > 0 then
+		local ratio = totalBossHP/totalMaxBossHP
+		if ratio <= 0 or ratio >= 1 then
+			--Boss is dead or reset (after group wipe or clear)
+			--Reset variables
 			PDT.resetDamage()
 		end
-	end, 2500)
+		--Else: player revived during bossfight. Don't reset variables
+	else
+		--Not a boss fight.
+		--Reset variables
+		PDT.resetDamage()
+	end
 end
 
 local function OnCombatEvent(eventCode, result, isError, abilityName, abilityGraphic, abilityActionSlotType, sourceName, sourceType, targetName, targetType, hitValue, powerType, damageType, _log, sourceUnitID, targetUnitID, abilityID, overflow)
