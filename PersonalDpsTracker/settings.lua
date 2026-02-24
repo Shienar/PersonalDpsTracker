@@ -23,7 +23,7 @@ local function temporarilyShowDmgTypes()
 end
 
 function PDT.setupSettings()
-
+    if not LibHarvensAddonSettings then return end
     --Settings
 	local settings = LibHarvensAddonSettings:AddAddon("Personal Dps Tracker")
 

@@ -4,7 +4,7 @@
 ## AddOnVersion: 21000
 ## Version: 2.1.0
 ## IsLibrary: False
-## ConsoleDependsOn: LibHarvensAddonSettings>=20004
+## OptionalDependsOn: LibHarvensAddonSettings>=20004
 ## SavedVariables: PDTSavedVariables
 
 PersonalDpsTracker.xml
